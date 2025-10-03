@@ -1,14 +1,8 @@
-.PHONY: all invoke import usage export callback slices main
-all: invoke export callback slices main
-
-invoke:
-	./build.sh invoke
+.PHONY: all import usage export callback slices usage main
+all: import export callback slices usage main
 
 import:
 	./build.sh import
-
-usage:
-	./build.sh usage
 
 export:
 	./build.sh export
@@ -18,6 +12,9 @@ callback:
 
 slices:
 	./build.sh slices
+
+usage:
+	./build.sh usage
 
 main:
 	./build.sh main

@@ -2,7 +2,6 @@ package io.roastedroot.tinygo;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.HashMap;
 
 public class RefStore {
     // we need to avoid returning 0 to disambiguate with NULL

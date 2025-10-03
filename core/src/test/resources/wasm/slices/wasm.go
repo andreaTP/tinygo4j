@@ -1,23 +1,27 @@
 package main
 
 import (
+	"os"
+	"fmt"
 	"strings"
-	"syscall/js"
+	"github.com/andreatp/tinygo4j"
 )
 
-func splitter(this js.Value, args []js.Value) interface{} {
-	values := strings.Split(args[0].String(), ",")
+func splitter(strRef tinygo4j.JavaRef) tinygo4j.JavaRef {
+	str := strRef.AsString()
+	values := strings.Split(str, ",")
 
 	result := make([]interface{}, 0)
 	for _, each := range values {
 		result = append(result, each)
 	}
 
-	return js.ValueOf(result)
+	return tinygo4j.Alloc().Set().String(fmt.Sprintf("%v", result))
 }
 
 func main() {
-	wait := make(chan struct{}, 0)
-	js.Global().Set("splitter", js.FuncOf(splitter))
-	<-wait
+	arg1 := os.Args[1]
+	in := tinygo4j.Alloc().Set().String(arg1)
+	str := splitter(in).AsString()
+	println(str)
 }

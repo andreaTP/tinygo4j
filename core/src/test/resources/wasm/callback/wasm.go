@@ -31,18 +31,16 @@ func main() {
 func reset(strRef tinygo4j.JavaRef)
 
 func update(strRef tinygo4j.JavaRef) bool {
-	str, strPtr := strRef.AsString()
+	str := strRef.AsString()
 
 	n, _ := strconv.Atoi(str)
 
 	if (n > 10) {
 		reset(strRef)
-		strPtr.Free()
 		return true
 	} else {
 		tinygo4j.Set(strRef).String(strconv.Itoa(n + 1))
 	}
 
-	strPtr.Free()
 	return false
 }

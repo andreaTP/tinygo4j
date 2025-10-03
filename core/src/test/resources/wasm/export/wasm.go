@@ -15,14 +15,11 @@ func add(a, b int) int {
 
 //export update
 func update(aRef, bRef tinygo4j.JavaRef) tinygo4j.JavaRef {
-	aStr, aPtr := aRef.AsString()
-	bStr, bPtr := bRef.AsString()
+	aStr := aRef.AsString()
+	bStr := bRef.AsString()
 	a, _ := strconv.Atoi(aStr)
 	b, _ := strconv.Atoi(bStr)
 	result := add(a, b)
-
-	aPtr.Free()
-	bPtr.Free()
 
 	return tinygo4j.Alloc().Set().String(strconv.Itoa(result))
 }

@@ -14,32 +14,37 @@ import com.dylibso.chicory.wasi.WasiPreview1;
 import com.dylibso.chicory.wasm.WasmModule;
 import com.dylibso.chicory.wasm.types.FunctionType;
 import com.dylibso.chicory.wasm.types.ValType;
-
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Function;
 
-public class Go {
+public final class Go {
     private final Instance instance;
     private final RefStore refs = new RefStore();
 
     private final ExportFunction mallocFn;
 
-    private Go(WasmModule module,
-               Function<Instance, Machine> machineFactory,
-               ImportFunction[] wasi,
-               Function<Go, ImportFunction[]> additionalImports,
-               boolean defaultImports) {
-        this.instance = Instance.builder(module)
-                .withImportValues(ImportValues.builder()
-                        .addFunction(wasi)
-                        .addFunction(additionalImports.apply(this))
-                        .addFunction((defaultImports) ? defaultImports(this) : new ImportFunction[0])
-                        .build())
-                .withMachineFactory(machineFactory)
-                .withMemoryFactory(ByteArrayMemory::new)
-                .withStart(false)
-                .build();
+    private Go(
+            WasmModule module,
+            Function<Instance, Machine> machineFactory,
+            ImportFunction[] wasi,
+            Function<Go, ImportFunction[]> additionalImports,
+            boolean defaultImports) {
+        this.instance =
+                Instance.builder(module)
+                        .withImportValues(
+                                ImportValues.builder()
+                                        .addFunction(wasi)
+                                        .addFunction(additionalImports.apply(this))
+                                        .addFunction(
+                                                (defaultImports)
+                                                        ? defaultImports(this)
+                                                        : new ImportFunction[0])
+                                        .build())
+                        .withMachineFactory(machineFactory)
+                        .withMemoryFactory(ByteArrayMemory::new)
+                        .withStart(false)
+                        .build();
         // TODO: this breaks on wasm-unknown
         this.mallocFn = instance.exports().function("malloc");
     }
@@ -65,7 +70,7 @@ public class Go {
     }
 
     public int goMalloc(int len) {
-        return (int) mallocFn.apply(new long[]{ len })[0];
+        return (int) mallocFn.apply(new long[] {len})[0];
     }
 
     // returns exitCode
@@ -105,100 +110,88 @@ public class Go {
     }
 
     private static ImportFunction[] defaultImports(Go goInstance) {
-        return new ImportFunction[]{
-                new HostFunction("env", "allocJava",
-                        FunctionType.of(
-                                List.of(),
-                                List.of(ValType.I32)
-                        ),
-                        (inst, args) -> {
-                            return new long[] { goInstance.allocJavaObj(null) };
-                        }
-                ),
-                new HostFunction("env", "setJavaString",
-                        FunctionType.of(
-                                List.of(ValType.I32, ValType.I32, ValType.I32),
-                                List.of()
-                        ),
-                        (inst, args) -> {
-                            int ref = (int) args[0];
-                            int sPtr = (int) args[1];
-                            int sLen = (int) args[2];
+        return new ImportFunction[] {
+            new HostFunction(
+                    "env",
+                    "allocJava",
+                    FunctionType.of(List.of(), List.of(ValType.I32)),
+                    (inst, args) -> {
+                        return new long[] {goInstance.allocJavaObj(null)};
+                    }),
+            new HostFunction(
+                    "env",
+                    "setJavaString",
+                    FunctionType.of(List.of(ValType.I32, ValType.I32, ValType.I32), List.of()),
+                    (inst, args) -> {
+                        int ref = (int) args[0];
+                        int sPtr = (int) args[1];
+                        int sLen = (int) args[2];
 
-                            var str = new String(inst.memory().readBytes(sPtr, sLen), StandardCharsets.UTF_8);
+                        var str =
+                                new String(
+                                        inst.memory().readBytes(sPtr, sLen),
+                                        StandardCharsets.UTF_8);
 
-                            goInstance.setJavaObj(ref, str);
-                            return null;
-                        }
-                ),
-                new HostFunction("env", "asGoString",
-                        FunctionType.of(
-                                List.of(ValType.I32),
-                                List.of(ValType.I64)
-                        ),
-                        (inst, args) -> {
-                            var ref = (int) args[0];
-                            var str = (String) goInstance.getJavaObj(ref);
-                            var strBytes = str.getBytes(StandardCharsets.UTF_8);
+                        goInstance.setJavaObj(ref, str);
+                        return null;
+                    }),
+            new HostFunction(
+                    "env",
+                    "asGoString",
+                    FunctionType.of(List.of(ValType.I32), List.of(ValType.I64)),
+                    (inst, args) -> {
+                        var ref = (int) args[0];
+                        var str = (String) goInstance.getJavaObj(ref);
+                        var strBytes = str.getBytes(StandardCharsets.UTF_8);
 
-                            // strings returned to Go needs to be freed
-                            var ptr = goInstance.goMalloc(strBytes.length);
-                            inst.memory().write(ptr, strBytes);
+                        var ptr = goInstance.goMalloc(strBytes.length);
+                        inst.memory().write(ptr, strBytes);
 
-                            var resPtr = (((long) ptr) << 32) | (strBytes.length & 0xffffffffL);
-                            return new long[] { resPtr };
-                        }
-                ),
-                new HostFunction("env", "allocJavaBool",
-                        FunctionType.of(
-                                List.of(ValType.I32),
-                                List.of(ValType.I32)
-                        ),
-                        (inst, args) -> {
-                            var bool = args[0] > 0;
+                        var resPtr = (((long) ptr) << 32) | (strBytes.length & 0xffffffffL);
+                        return new long[] {resPtr};
+                    }),
+            new HostFunction(
+                    "env",
+                    "allocJavaBool",
+                    FunctionType.of(List.of(ValType.I32), List.of(ValType.I32)),
+                    (inst, args) -> {
+                        var bool = args[0] > 0;
 
-                            return new long[] { goInstance.allocJavaObj(bool) };
-                        }
-                ),
-                new HostFunction("env", "setJavaBool",
-                        FunctionType.of(
-                                List.of(ValType.I32, ValType.I32),
-                                List.of()
-                        ),
-                        (inst, args) -> {
-                            var ref = (int) args[0];
-                            var bool = args[1] > 0;
-                            goInstance.setJavaObj(ref, bool);
-                            return null;
-                        }
-                ),
-                new HostFunction("env", "asGoBool",
-                        FunctionType.of(
-                                List.of(ValType.I32),
-                                List.of(ValType.I32)
-                        ),
-                        (inst, args) -> {
-                            var ref = (int) args[0];
-                            var bool = (Boolean) goInstance.getJavaObj(ref);
+                        return new long[] {goInstance.allocJavaObj(bool)};
+                    }),
+            new HostFunction(
+                    "env",
+                    "setJavaBool",
+                    FunctionType.of(List.of(ValType.I32, ValType.I32), List.of()),
+                    (inst, args) -> {
+                        var ref = (int) args[0];
+                        var bool = args[1] > 0;
+                        goInstance.setJavaObj(ref, bool);
+                        return null;
+                    }),
+            new HostFunction(
+                    "env",
+                    "asGoBool",
+                    FunctionType.of(List.of(ValType.I32), List.of(ValType.I32)),
+                    (inst, args) -> {
+                        var ref = (int) args[0];
+                        var bool = (Boolean) goInstance.getJavaObj(ref);
 
-                            return (bool) ? new long[]{1} : new long[] {0};
-                        }
-                ),
-                new HostFunction("env", "free",
-                        FunctionType.of(
-                                List.of(ValType.I32),
-                                List.of()
-                        ),
-                        (inst, args) -> {
-                            var ref = (int) args[0];
-                            goInstance.freeJavaObj(ref);
-                            return null;
-                        }
-                ),
+                        return (bool) ? new long[] {1} : new long[] {0};
+                    }),
+            new HostFunction(
+                    "env",
+                    "free",
+                    FunctionType.of(List.of(ValType.I32), List.of()),
+                    (inst, args) -> {
+                        var ref = (int) args[0];
+                        goInstance.freeJavaObj(ref);
+                        return null;
+                    }),
         };
     }
 
-    public static class Builder {
+    public static final class Builder {
         private final WasmModule module;
         private Function<Instance, Machine> machineFactory;
         private ImportFunction[] wasi;

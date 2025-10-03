@@ -11,9 +11,6 @@ type JavaRef uint32
 type SetBuilder struct {
 	ref JavaRef
 }
-type CStringPtr struct {
-	ptr unsafe.Pointer
-}
 
 func Alloc() JavaRef {
 	return allocJava()
@@ -37,21 +34,20 @@ func (set SetBuilder) Bool(v bool) JavaRef {
 	return set.ref
 }
 
-func (ref JavaRef) AsString() (string, CStringPtr) {
+func (ref JavaRef) AsString() string {
     v := asGoString(ref)
     ptr := unsafe.Pointer(uintptr(uint32(v >> 32)))
     length := int(uint32(v))
 
     if ptr == nil || length == 0 {
-        return "", CStringPtr{} // unsafe.Pointer(nil))
+        return ""
     }
 
     buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
-    return string(buffer), CStringPtr{ptr}
-}
+	result := string(buffer)
 
-func (ptr CStringPtr) Free() {
-	C.free(ptr.ptr)
+	C.free(ptr)
+    return result
 }
 
 func (ref JavaRef) AsBool() bool {
