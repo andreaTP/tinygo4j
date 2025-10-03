@@ -9,14 +9,14 @@ func myJavaValidate(str tinygo4j.JavaRef) tinygo4j.JavaRef
 
 //export usage
 func usage(strRef tinygo4j.JavaRef) bool {
-    str := strRef.AsString()
-    strRef2 := tinygo4j.Alloc().Set().String(str)
+	str := strRef.AsString()
+	strRef2 := tinygo4j.Alloc().Set().String(str)
 
-    valid := myJavaValidate(strRef2)
+	valid := myJavaValidate(strRef2)
 
-    strRef2.Free()
+	strRef2.Free()
 
-    return valid.AsBool()
+	return valid.AsBool()
 }
 
 func main() {

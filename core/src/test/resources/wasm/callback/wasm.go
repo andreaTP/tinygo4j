@@ -1,9 +1,9 @@
 package main
 
 import (
-	"time"
-	"strconv"
 	"github.com/andreatp/tinygo4j"
+	"strconv"
+	"time"
 )
 
 func main() {
@@ -13,12 +13,12 @@ func main() {
 	quit := make(chan struct{})
 	go func() {
 		for {
-		select {
-			case <- ticker.C:
+			select {
+			case <-ticker.C:
 				if update(strRef) {
 					close(quit)
 				}
-			case <- quit:
+			case <-quit:
 				ticker.Stop()
 				return
 			}
@@ -35,7 +35,7 @@ func update(strRef tinygo4j.JavaRef) bool {
 
 	n, _ := strconv.Atoi(str)
 
-	if (n > 10) {
+	if n > 10 {
 		reset(strRef)
 		return true
 	} else {

@@ -35,19 +35,19 @@ func (set SetBuilder) Bool(v bool) JavaRef {
 }
 
 func (ref JavaRef) AsString() string {
-    v := asGoString(ref)
-    ptr := unsafe.Pointer(uintptr(uint32(v >> 32)))
-    length := int(uint32(v))
+	v := asGoString(ref)
+	ptr := unsafe.Pointer(uintptr(uint32(v >> 32)))
+	length := int(uint32(v))
 
-    if ptr == nil || length == 0 {
-        return ""
-    }
+	if ptr == nil || length == 0 {
+		return ""
+	}
 
-    buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
+	buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
 	result := string(buffer)
 
 	C.free(ptr)
-    return result
+	return result
 }
 
 func (ref JavaRef) AsBool() bool {
@@ -75,4 +75,3 @@ func asGoBool(ref JavaRef) bool
 
 //go:wasmimport env free
 func free(str JavaRef)
-

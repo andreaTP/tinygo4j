@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
 	"fmt"
-	"strings"
 	"github.com/andreatp/tinygo4j"
+	"os"
+	"strings"
 )
 
 func splitter(strRef tinygo4j.JavaRef) tinygo4j.JavaRef {

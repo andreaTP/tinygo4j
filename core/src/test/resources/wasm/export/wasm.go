@@ -1,8 +1,8 @@
 package main
 
 import (
-	"strconv"
 	"github.com/andreatp/tinygo4j"
+	"strconv"
 )
 
 func main() {
