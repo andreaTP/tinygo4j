@@ -175,6 +175,24 @@ public class GoTest {
     }
 
     @Test
+    public void exportWasiBuildTimeCompilerExample() {
+        // Arrange
+        var module = ExportWasi.load();
+
+        var go = Go.builder(module).withWasi().withMachineFactory(ExportWasi::create).build();
+
+        // Act
+        go.run();
+        var aRef = go.allocJavaObj("3");
+        var bRef = go.allocJavaObj("11");
+        var resultRef = (int) go.exec("update", new long[] {aRef, bRef})[0];
+        var result = go.getJavaObj(resultRef);
+
+        // Assert
+        assertEquals("14", result);
+    }
+
+    @Test
     public void slicesWasiExample() {
         // Arrange
         var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/slices-wasi.wasm");

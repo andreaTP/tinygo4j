@@ -54,7 +54,6 @@ func (ref JavaRef) AsBool() bool {
 	return asGoBool(ref)
 }
 
-
 func (ref JavaRef) Free() {
 	free(ref)
 }

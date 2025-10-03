@@ -47,7 +47,6 @@
 
   <build>
     <plugins>
-
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
@@ -61,7 +60,25 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <groupId>com.dylibso.chicory</groupId>
+        <artifactId>chicory-compiler-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>export-wasi</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <name>io.roastedroot.tinygo.ExportWasi</name>
+              <wasmFile>src/test/resources/wasm/compiled/export-wasi.wasm</wasmFile>
+              <targetClassFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetClassFolder>
+              <targetWasmFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetWasmFolder>
+              <targetSourceFolder>${project.build.directory}/generated-test-sources/chicory-compiler</targetSourceFolder>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
