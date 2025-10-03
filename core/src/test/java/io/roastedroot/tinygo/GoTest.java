@@ -131,4 +131,25 @@ public class GoTest {
         // Assert
         assertEquals(11, resetInvoked.get());
     }
+
+    @Test
+    public void exportWasiExample() {
+        // Arrange
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/export-wasi.wasm");
+        var module = Parser.parse(wasm);
+
+        var go = Go.builder(module)
+                .withWasi()
+                .build();
+
+        // Act
+        go.run();
+        var aRef = go.allocJavaObj("3");
+        var bRef = go.allocJavaObj("11");
+        var resultRef = (int) go.exec("update", new long[] { aRef, bRef })[0];
+        var result = go.getJavaObj(resultRef);
+
+        // Assert
+        assertEquals("14", result);
+    }
 }

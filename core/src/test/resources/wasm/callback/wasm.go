@@ -6,11 +6,8 @@ import (
 	"github.com/andreatp/tinygo4j"
 )
 
-// #include <stdlib.h>
-import "C"
-
 func main() {
-	strRef := tinygo4j.Alloc().String("0")
+	strRef := tinygo4j.Alloc().Set().String("0")
 
 	ticker := time.NewTicker(200 * time.Millisecond)
 	quit := make(chan struct{})
@@ -40,12 +37,12 @@ func update(strRef tinygo4j.JavaRef) bool {
 
 	if (n > 10) {
 		reset(strRef)
-		C.free(strPtr)
+		strPtr.Free()
 		return true
 	} else {
 		tinygo4j.Set(strRef).String(strconv.Itoa(n + 1))
 	}
 
-	C.free(strPtr)
+	strPtr.Free()
 	return false
 }

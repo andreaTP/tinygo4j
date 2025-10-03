@@ -4,49 +4,54 @@ import (
 	"unsafe"
 )
 
-type JavaRef uint32
-type AllocBuilder struct {}
+// #include <stdlib.h>
+import "C"
 
-// TODO: since we have Set Alloc can be generic and doesn't need to be type specific
+type JavaRef uint32
 type SetBuilder struct {
 	ref JavaRef
 }
-
-func Alloc() AllocBuilder {
-	return AllocBuilder{}
+type CStringPtr struct {
+	ptr unsafe.Pointer
 }
 
-func (AllocBuilder) String(str string) JavaRef {
-	return allocJavaString(str)
+func Alloc() JavaRef {
+	return allocJava()
 }
 
-func (AllocBuilder) Bool(v bool) JavaRef {
-	return allocJavaBool(v)
+func (ref JavaRef) Set() SetBuilder {
+	return SetBuilder{ref}
 }
 
 func Set(ref JavaRef) SetBuilder {
 	return SetBuilder{ref}
 }
 
-func (set SetBuilder) String(str string) {
+func (set SetBuilder) String(str string) JavaRef {
 	setJavaString(set.ref, str)
+	return set.ref
 }
 
-func (set SetBuilder) Bool(v bool) {
+func (set SetBuilder) Bool(v bool) JavaRef {
 	setJavaBool(set.ref, v)
+	return set.ref
 }
 
-func (ref JavaRef) AsString() (string, unsafe.Pointer) {
+func (ref JavaRef) AsString() (string, CStringPtr) {
     v := asGoString(ref)
     ptr := unsafe.Pointer(uintptr(uint32(v >> 32)))
     length := int(uint32(v))
 
     if ptr == nil || length == 0 {
-        return "", nil
+        return "", CStringPtr{} // unsafe.Pointer(nil))
     }
 
     buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
-    return string(buffer), ptr
+    return string(buffer), CStringPtr{ptr}
+}
+
+func (ptr CStringPtr) Free() {
+	C.free(ptr.ptr)
 }
 
 func (ref JavaRef) AsBool() bool {
@@ -58,17 +63,14 @@ func (ref JavaRef) Free() {
 	free(ref)
 }
 
-//go:wasmimport env allocJavaString
-func allocJavaString(str string) JavaRef
+//go:wasmimport env allocJava
+func allocJava() JavaRef
 
 //go:wasmimport env setJavaString
 func setJavaString(ref JavaRef, str string)
 
 //go:wasmimport env asGoString
 func asGoString(str JavaRef) uint64
-
-//go:wasmimport env allocJavaBool
-func allocJavaBool(v bool) JavaRef
 
 //go:wasmimport env setJavaBool
 func setJavaBool(ref JavaRef, v bool)

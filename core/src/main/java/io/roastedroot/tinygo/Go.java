@@ -40,6 +40,7 @@ public class Go {
                 .withMemoryFactory(ByteArrayMemory::new)
                 .withStart(false)
                 .build();
+        // TODO: this breaks on wasm-unknown
         this.mallocFn = instance.exports().function("malloc");
     }
 
@@ -105,18 +106,13 @@ public class Go {
 
     private static ImportFunction[] defaultImports(Go goInstance) {
         return new ImportFunction[]{
-                new HostFunction("env", "allocJavaString",
+                new HostFunction("env", "allocJava",
                         FunctionType.of(
-                                List.of(ValType.I32, ValType.I32),
+                                List.of(),
                                 List.of(ValType.I32)
                         ),
                         (inst, args) -> {
-                            int sPtr = (int) args[0];
-                            int sLen = (int) args[1];
-
-                            var str = new String(inst.memory().readBytes(sPtr, sLen), StandardCharsets.UTF_8);
-
-                            return new long[] { goInstance.allocJavaObj(str) };
+                            return new long[] { goInstance.allocJavaObj(null) };
                         }
                 ),
                 new HostFunction("env", "setJavaString",

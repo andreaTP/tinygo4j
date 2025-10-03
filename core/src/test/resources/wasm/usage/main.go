@@ -8,12 +8,14 @@ import (
 func myJavaValidate(str tinygo4j.JavaRef) tinygo4j.JavaRef
 
 //export usage
-func usage(str tinygo4j.JavaRef) bool {
-    strRef := tinygo4j.Alloc().String(str.AsString())
+func usage(strRef tinygo4j.JavaRef) bool {
+    str, strPtr := strRef.AsString()
+    strRef2 := tinygo4j.Alloc().Set().String(str)
 
-    valid := myJavaValidate(strRef)
+    valid := myJavaValidate(strRef2)
 
-    strRef.Free()
+    strRef2.Free()
+    strPtr.Free()
 
     return valid.AsBool()
 }

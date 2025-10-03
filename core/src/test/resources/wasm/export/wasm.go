@@ -5,9 +5,6 @@ import (
 	"github.com/andreatp/tinygo4j"
 )
 
-// #include <stdlib.h>
-import "C"
-
 func main() {
 }
 
@@ -24,8 +21,8 @@ func update(aRef, bRef tinygo4j.JavaRef) tinygo4j.JavaRef {
 	b, _ := strconv.Atoi(bStr)
 	result := add(a, b)
 
-	C.free(aPtr)
-	C.free(bPtr)
+	aPtr.Free()
+	bPtr.Free()
 
-	return tinygo4j.Alloc().String(strconv.Itoa(result))
+	return tinygo4j.Alloc().Set().String(strconv.Itoa(result))
 }
