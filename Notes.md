@@ -1,8 +1,9 @@
 
-Port the functionalities of targets/wasm_exec.js
+Port the functionalities of targets/wasm_exec.js - the semantics differ very much going down a different path
 Make it super easy to use and support maven plugin and stuff
+build time and runtime compiler support
 
-serialization with Json and host references across the boundaries?
-wasip1 & unknown support
+host references everywhere for iterop
+wasip1
 
-build time and runtime compiler
+TODO - wasm-unknown support?

@@ -1,25 +1,59 @@
 package tinygo4j
 
-type ref = uint32
+import (
+	"unsafe"
+)
 
-func ValueNew() ref {
-	return envValueNew()
+type JavaRef uint32
+type Builder struct {}
+
+func Alloc() Builder {
+	return Builder{}
 }
 
-// TODO: verify is multiple dispatch works
-func ValueSet(v ref, name string, value ref) {
-	envValueSet(v, name, value)
+func (Builder) String(str string) JavaRef {
+	return allocJavaString(str)
 }
 
-func ValueGet(v ref, name string) ref {
-	return envValueGet(v, name)
+func (Builder) Bool(v bool) JavaRef {
+	return allocJavaBool(v)
 }
 
-//go:wasmimport env valueNew
-func envValueNew() ref
+func (ref JavaRef) AsString() string {
+	v := asGoString(ref)
+	ptr := uint32(v >> 4)
+	len := uint32(v)
 
-//go:wasmimport env valueSet
-func envValueSet(v ref, name string, value ref)
+	// TODO: improve the implementation
+	buffer := make([]byte, len)
+	for i := 0; i < int(len); i++ {
+		s := *(*int32)(unsafe.Pointer(uintptr(ptr) + uintptr(i)))
+		buffer[i] = byte(s)
+	}
+	return string(buffer)
+}
 
-//go:wasmimport env valueGet
-func envValueGet(v ref, name string) ref
+func (ref JavaRef) AsBool() bool {
+	return asGoBool(ref)
+}
+
+
+func (ref JavaRef) Free() {
+	free(ref)
+}
+
+//go:wasmimport env allocJavaString
+func allocJavaString(str string) JavaRef
+
+//go:wasmimport env asGoString
+func asGoString(str JavaRef) uint64
+
+//go:wasmimport env allocJavaBool
+func allocJavaBool(v bool) JavaRef
+
+//go:wasmimport env asGoBool
+func asGoBool(ref JavaRef) bool
+
+//go:wasmimport env free
+func free(str JavaRef)
+

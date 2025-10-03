@@ -26,25 +26,44 @@ public class Go {
     private final Instance instance;
     private final RefStore refs = new RefStore();
 
+    private final ExportFunction mallocFn;
+
     private Go(WasmModule module,
                Function<Instance, Machine> machineFactory,
                ImportFunction[] wasi,
-               ImportFunction[] additionalImports,
+               Function<Go, ImportFunction[]> additionalImports,
                boolean defaultImports) {
         this.instance = Instance.builder(module)
                 .withImportValues(ImportValues.builder()
                         .addFunction(wasi)
-                        .addFunction(additionalImports)
+                        .addFunction(additionalImports.apply(this))
                         .addFunction((defaultImports) ? defaultImports(this) : new ImportFunction[0])
                         .build())
                 .withMachineFactory(machineFactory)
                 .withMemoryFactory(ByteArrayMemory::new)
                 .withStart(false)
                 .build();
+        this.mallocFn = instance.exports().function("malloc");
     }
 
     public static Builder builder(WasmModule module) {
         return new Builder(module);
+    }
+
+    public Object getJavaObj(int ref) {
+        return refs.get(ref);
+    }
+
+    public int setJavaObj(Object v) {
+        return refs.registerRef(v);
+    }
+
+    public void freeJavaObj(int ref) {
+        refs.free(ref);
+    }
+
+    public int goMalloc(int len) {
+        return (int) mallocFn.apply(new long[len])[0];
     }
 
     // returns exitCode
@@ -83,59 +102,74 @@ public class Go {
         return instance.exports().function(export).apply(args);
     }
 
-    private String loadString(int ptr, int len) {
-        return new String(instance.memory().readBytes(ptr, len), StandardCharsets.UTF_8);
-    }
-
     private static ImportFunction[] defaultImports(Go goInstance) {
         return new ImportFunction[]{
-                new HostFunction("env", "valueNew",
+                new HostFunction("env", "allocJavaString",
                         FunctionType.of(
-                                List.of(),
+                                List.of(ValType.I32, ValType.I32),
                                 List.of(ValType.I32)
                         ),
                         (inst, args) -> {
-                            return new long[] { goInstance.refs.registerRef(new HashMap<String, Object>()) };
+                            int sPtr = (int) args[0];
+                            int sLen = (int) args[1];
+
+                            var str = new String(inst.memory().readBytes(sPtr, sLen), StandardCharsets.UTF_8);
+
+                            return new long[] { goInstance.setJavaObj(str) };
                         }
                 ),
-                new HostFunction("env", "valueSet",
+                new HostFunction("env", "asGoString",
                         FunctionType.of(
-                                List.of(ValType.I32, ValType.I32, ValType.I32, ValType.I32),
+                                List.of(ValType.I32),
+                                List.of(ValType.I64)
+                        ),
+                        (inst, args) -> {
+                            var ref = (int) args[0];
+                            var str = (String) goInstance.getJavaObj(ref);
+                            var strBytes = str.getBytes(StandardCharsets.UTF_8);
+
+                            // strings returned to Go needs to be freed
+                            var ptr = goInstance.goMalloc(strBytes.length);
+                            inst.memory().write(ptr, strBytes);
+
+                            var resPtr = (((long) ptr) << 4) | ((long) strBytes.length);
+                            return new long[] { resPtr };
+                        }
+                ),
+                new HostFunction("env", "allocJavaBool",
+                        FunctionType.of(
+                                List.of(ValType.I32),
+                                List.of(ValType.I32)
+                        ),
+                        (inst, args) -> {
+                            var bool = args[0] > 0;
+
+                            return new long[] { goInstance.setJavaObj(bool) };
+                        }
+                ),
+                new HostFunction("env", "asGoBool",
+                        FunctionType.of(
+                                List.of(ValType.I32),
+                                List.of(ValType.I32)
+                        ),
+                        (inst, args) -> {
+                            var ref = (int) args[0];
+                            var bool = (Boolean) goInstance.getJavaObj(ref);
+
+                            return (bool) ? new long[]{1} : new long[] {0};
+                        }
+                ),
+                new HostFunction("env", "free",
+                        FunctionType.of(
+                                List.of(ValType.I32),
                                 List.of()
                         ),
                         (inst, args) -> {
-                            int vRef = (int) args[0];
-                            int pPtr = (int) args[1];
-                            int pLen = (int) args[2];
-                            long value = args[3];
-
-                            var ref = goInstance.refs.get(vRef);
-                            if (ref instanceof Map) {
-                                ((Map<String, Object>) ref).put(goInstance.loadString(pPtr, pLen), value);
-                            } else {
-                                throw new RuntimeException("unsupported valueSet type " + ref);
-                            }
+                            var ref = (int) args[0];
+                            goInstance.freeJavaObj(ref);
                             return null;
                         }
                 ),
-                new HostFunction("env", "valueGet",
-                        FunctionType.of(
-                                List.of(ValType.I32, ValType.I32, ValType.I32),
-                                List.of(ValType.I32)
-                        ),
-                        (inst, args) -> {
-                            int vRef = (int) args[0];
-                            int pPtr = (int) args[1];
-                            int pLen = (int) args[2];
-
-                            var ref = goInstance.refs.get(vRef);
-                            if (ref instanceof Map) {
-                                return new long[] {(long) ((Map<String, Object>) ref).get(goInstance.loadString(pPtr, pLen))};
-                            } else {
-                                throw new RuntimeException("unsupported valueSet type " + ref);
-                            }
-                        }
-                )
         };
     }
 
@@ -143,7 +177,7 @@ public class Go {
         private final WasmModule module;
         private Function<Instance, Machine> machineFactory;
         private ImportFunction[] wasi;
-        private ImportFunction[] additionalImports;
+        private Function<Go, ImportFunction[]> additionalImports;
         private boolean defaultImports = true;
 
         private Builder(WasmModule module) {
@@ -173,14 +207,8 @@ public class Go {
             return this;
         }
 
-        public Builder withAdditionalImport(ImportFunction... imports) {
-            if (additionalImports == null) {
-                additionalImports = imports;
-            } else {
-                var length = additionalImports.length;
-                additionalImports = Arrays.copyOf(additionalImports, length + imports.length);
-                System.arraycopy(imports, 0, additionalImports, length, imports.length);
-            }
+        public Builder withAdditionalImport(Function<Go, ImportFunction[]> importsFun) {
+            additionalImports = importsFun;
             return this;
         }
 
@@ -193,7 +221,7 @@ public class Go {
                 wasi = new ImportFunction[0];
             }
             if (additionalImports == null) {
-                additionalImports = new ImportFunction[0];
+                additionalImports = goInst -> new ImportFunction[0];
             }
 
             return new Go(module, machineFactory, wasi, additionalImports, defaultImports);
