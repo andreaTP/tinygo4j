@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.dylibso.chicory.compiler.MachineFactoryCompiler;
 import com.dylibso.chicory.runtime.HostFunction;
 import com.dylibso.chicory.runtime.ImportFunction;
 import com.dylibso.chicory.wasi.WasiOptions;
@@ -138,6 +139,29 @@ public class GoTest {
         var module = Parser.parse(wasm);
 
         var go = Go.builder(module).withWasi().build();
+
+        // Act
+        go.run();
+        var aRef = go.allocJavaObj("3");
+        var bRef = go.allocJavaObj("11");
+        var resultRef = (int) go.exec("update", new long[] {aRef, bRef})[0];
+        var result = go.getJavaObj(resultRef);
+
+        // Assert
+        assertEquals("14", result);
+    }
+
+    @Test
+    public void exportWasiRuntimeCompilerExample() {
+        // Arrange
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/export-wasi.wasm");
+        var module = Parser.parse(wasm);
+
+        var go =
+                Go.builder(module)
+                        .withWasi()
+                        .withMachineFactory(MachineFactoryCompiler::compile)
+                        .build();
 
         // Act
         go.run();
