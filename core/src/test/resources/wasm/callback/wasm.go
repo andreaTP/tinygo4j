@@ -1,29 +1,48 @@
 package main
 
 import (
+	"time"
 	"strconv"
-	"syscall/js"
+	"github.com/andreatp/tinygo4j"
 )
 
-var a, b int
+// #include <stdlib.h>
+import "C"
 
 func main() {
-	wait := make(chan struct{}, 0)
-	document := js.Global().Get("document")
-	document.Call("getElementById", "a").Set("oninput", updater(&a))
-	document.Call("getElementById", "b").Set("oninput", updater(&b))
-	update()
-	<-wait
+	strRef := tinygo4j.Alloc().String("0")
+
+	ticker := time.NewTicker(1 * time.Second)
+	quit := make(chan struct{})
+	go func() {
+		for {
+		select {
+			case <- ticker.C:
+				update(strRef)
+			case <- quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	<-quit
 }
 
-func updater(n *int) js.Func {
-	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		*n, _ = strconv.Atoi(this.Get("value").String())
-		update()
-		return nil
-	})
-}
+//go:wasmimport mygo reset
+func reset(strRef tinygo4j.JavaRef)
 
-func update() {
-	js.Global().Get("document").Call("getElementById", "result").Set("value", a+b)
+func update(strRef tinygo4j.JavaRef) {
+	str, strPtr := strRef.AsString()
+
+	println(str)
+
+	n, _ := strconv.Atoi(str)
+
+	if (n > 10) {
+		reset(strRef)
+	} else {
+		tinygo4j.Set(strRef).String(strconv.Itoa(n + 1))
+	}
+
+	C.free(strPtr)
 }

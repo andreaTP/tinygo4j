@@ -76,7 +76,7 @@ public class GoTest {
                                             var ref = (int) args[0];
                                             var str = (String) goInst.getJavaObj(ref);
 
-                                            return new long[] { goInst.setJavaObj(str.equals("foo")) };
+                                            return new long[] { goInst.allocJavaObj(str.equals("foo")) };
                                         })
                         }
                 )
@@ -84,8 +84,8 @@ public class GoTest {
 
         // Act
         go.run();
-        var str1 = go.setJavaObj("foo");
-        var str2 = go.setJavaObj("bar");
+        var str1 = go.allocJavaObj("foo");
+        var str2 = go.allocJavaObj("bar");
 
         var result1 = ((int) go.exec("usage", new long[] { str1 })[0]) > 0;
         var result2 = ((int) go.exec("usage", new long[] { str2 })[0]) > 0;
@@ -93,5 +93,38 @@ public class GoTest {
         // Assert
         assertTrue(result1);
         assertFalse(result2);
+    }
+
+    @Test
+    public void callbackWasiExample() {
+        // Arrange
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/callback-wasi.wasm");
+        var module = Parser.parse(wasm);
+
+        var go = Go.builder(module)
+                .withWasi()
+                .withAdditionalImport(goInst ->
+                        new ImportFunction[]{
+                                new HostFunction("mygo", "reset", FunctionType.of(
+                                        List.of(ValType.I32),
+                                        List.of()
+                                ),
+                                        (inst, args) -> {
+                                            var ref = (int) args[0];
+                                            var str = (String) goInst.getJavaObj(ref);
+
+                                            System.out.println("Got " + str + ", resetting.");
+
+                                            goInst.setJavaObj(ref, "0");
+                                            return null;
+                                        })
+                        }
+                )
+                .build();
+
+        // Act
+        go.run();
+
+        // Assert
     }
 }

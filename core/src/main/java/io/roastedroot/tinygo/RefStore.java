@@ -51,4 +51,9 @@ public class RefStore {
         idx = idx - OFFSET;
         return store[idx];
     }
+
+    public void set(int idx, Object obj) {
+        idx = idx - OFFSET;
+        store[idx] = obj;
+    }
 }

@@ -5,32 +5,46 @@ import (
 )
 
 type JavaRef uint32
-type Builder struct {}
-
-func Alloc() Builder {
-	return Builder{}
+type AllocBuilder struct {}
+type SetBuilder struct {
+	ref JavaRef
 }
 
-func (Builder) String(str string) JavaRef {
+func Alloc() AllocBuilder {
+	return AllocBuilder{}
+}
+
+func (AllocBuilder) String(str string) JavaRef {
 	return allocJavaString(str)
 }
 
-func (Builder) Bool(v bool) JavaRef {
+func (AllocBuilder) Bool(v bool) JavaRef {
 	return allocJavaBool(v)
 }
 
-func (ref JavaRef) AsString() string {
-	v := asGoString(ref)
-	ptr := uint32(v >> 4)
-	len := uint32(v)
+func Set(ref JavaRef) SetBuilder {
+	return SetBuilder{ref}
+}
 
-	// TODO: improve the implementation
-	buffer := make([]byte, len)
-	for i := 0; i < int(len); i++ {
-		s := *(*int32)(unsafe.Pointer(uintptr(ptr) + uintptr(i)))
-		buffer[i] = byte(s)
-	}
-	return string(buffer)
+func (set SetBuilder) String(str string) {
+	setJavaString(set.ref, str)
+}
+
+func (set SetBuilder) Bool(v bool) {
+	setJavaBool(set.ref, v)
+}
+
+func (ref JavaRef) AsString() (string, unsafe.Pointer) {
+    v := asGoString(ref)
+    ptr := unsafe.Pointer(uintptr(uint32(v >> 4)))
+    length := int(uint32(v))
+
+    if ptr == nil || length == 0 {
+        return "", nil
+    }
+
+    buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
+    return string(buffer), ptr
 }
 
 func (ref JavaRef) AsBool() bool {
@@ -45,11 +59,17 @@ func (ref JavaRef) Free() {
 //go:wasmimport env allocJavaString
 func allocJavaString(str string) JavaRef
 
+//go:wasmimport env setJavaString
+func setJavaString(ref JavaRef, str string)
+
 //go:wasmimport env asGoString
 func asGoString(str JavaRef) uint64
 
 //go:wasmimport env allocJavaBool
 func allocJavaBool(v bool) JavaRef
+
+//go:wasmimport env setJavaBool
+func setJavaBool(ref JavaRef, v bool)
 
 //go:wasmimport env asGoBool
 func asGoBool(ref JavaRef) bool

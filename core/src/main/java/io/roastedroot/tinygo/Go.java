@@ -16,10 +16,7 @@ import com.dylibso.chicory.wasm.types.FunctionType;
 import com.dylibso.chicory.wasm.types.ValType;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 public class Go {
@@ -54,8 +51,12 @@ public class Go {
         return refs.get(ref);
     }
 
-    public int setJavaObj(Object v) {
+    public int allocJavaObj(Object v) {
         return refs.registerRef(v);
+    }
+
+    public void setJavaObj(int ref, Object v) {
+        refs.set(ref, v);
     }
 
     public void freeJavaObj(int ref) {
@@ -115,7 +116,23 @@ public class Go {
 
                             var str = new String(inst.memory().readBytes(sPtr, sLen), StandardCharsets.UTF_8);
 
-                            return new long[] { goInstance.setJavaObj(str) };
+                            return new long[] { goInstance.allocJavaObj(str) };
+                        }
+                ),
+                new HostFunction("env", "setJavaString",
+                        FunctionType.of(
+                                List.of(ValType.I32, ValType.I32, ValType.I32),
+                                List.of()
+                        ),
+                        (inst, args) -> {
+                            int ref = (int) args[0];
+                            int sPtr = (int) args[1];
+                            int sLen = (int) args[2];
+
+                            var str = new String(inst.memory().readBytes(sPtr, sLen), StandardCharsets.UTF_8);
+
+                            goInstance.setJavaObj(ref, str);
+                            return null;
                         }
                 ),
                 new HostFunction("env", "asGoString",
@@ -144,7 +161,19 @@ public class Go {
                         (inst, args) -> {
                             var bool = args[0] > 0;
 
-                            return new long[] { goInstance.setJavaObj(bool) };
+                            return new long[] { goInstance.allocJavaObj(bool) };
+                        }
+                ),
+                new HostFunction("env", "setJavaBool",
+                        FunctionType.of(
+                                List.of(ValType.I32, ValType.I32),
+                                List.of()
+                        ),
+                        (inst, args) -> {
+                            var ref = (int) args[0];
+                            var bool = args[1] > 0;
+                            goInstance.setJavaObj(ref, bool);
+                            return null;
                         }
                 ),
                 new HostFunction("env", "asGoBool",
