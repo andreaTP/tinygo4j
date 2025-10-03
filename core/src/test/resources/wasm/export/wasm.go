@@ -2,8 +2,11 @@ package main
 
 import (
 	"strconv"
-	"syscall/js"
+	"github.com/andreatp/tinygo4j"
 )
+
+// #include <stdlib.h>
+import "C"
 
 func main() {
 }
@@ -14,12 +17,15 @@ func add(a, b int) int {
 }
 
 //export update
-func update() {
-	document := js.Global().Get("document")
-	aStr := document.Call("getElementById", "a").Get("value").String()
-	bStr := document.Call("getElementById", "b").Get("value").String()
+func update(aRef, bRef tinygo4j.JavaRef) tinygo4j.JavaRef {
+	aStr, aPtr := aRef.AsString()
+	bStr, bPtr := bRef.AsString()
 	a, _ := strconv.Atoi(aStr)
 	b, _ := strconv.Atoi(bStr)
 	result := add(a, b)
-	document.Call("getElementById", "result").Set("value", result)
+
+	C.free(aPtr)
+	C.free(bPtr)
+
+	return tinygo4j.Alloc().String(strconv.Itoa(result))
 }

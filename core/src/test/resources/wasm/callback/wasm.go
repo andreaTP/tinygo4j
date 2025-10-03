@@ -2,7 +2,6 @@ package main
 
 import (
 	"time"
-	// TODO: implement numbers handling
 	"strconv"
 	"github.com/andreatp/tinygo4j"
 )
