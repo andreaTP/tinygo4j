@@ -64,7 +64,7 @@ public class Go {
     }
 
     public int goMalloc(int len) {
-        return (int) mallocFn.apply(new long[len])[0];
+        return (int) mallocFn.apply(new long[]{ len })[0];
     }
 
     // returns exitCode
@@ -149,7 +149,7 @@ public class Go {
                             var ptr = goInstance.goMalloc(strBytes.length);
                             inst.memory().write(ptr, strBytes);
 
-                            var resPtr = (((long) ptr) << 4) | ((long) strBytes.length);
+                            var resPtr = (((long) ptr) << 32) | (strBytes.length & 0xffffffffL);
                             return new long[] { resPtr };
                         }
                 ),
@@ -214,7 +214,7 @@ public class Go {
         }
 
         public Builder withWasi() {
-            return withWasi(WasiOptions.builder().build());
+            return withWasi(WasiOptions.builder().inheritSystem().build());
         }
 
         public Builder withWasi(WasiOptions wasiOpts) {

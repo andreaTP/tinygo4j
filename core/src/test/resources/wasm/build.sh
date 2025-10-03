@@ -9,15 +9,15 @@ name=$1
 rm -f ${SCRIPT_DIR}/tinygo4j/*.mod
 rm -f ${SCRIPT_DIR}/tinygo4j/*.go
 
-cp ${SCRIPT_DIR}/../../../../../*.mod ./tinygo4j
-cp ${SCRIPT_DIR}/../../../../../*.go ./tinygo4j
+cp ${SCRIPT_DIR}/../../../../../*.mod ${SCRIPT_DIR}/tinygo4j
+cp ${SCRIPT_DIR}/../../../../../*.go ${SCRIPT_DIR}/tinygo4j
 
 docker run --rm \
     -v ${SCRIPT_DIR}/${name}:/src \
     -v ${SCRIPT_DIR}/tinygo4j:/tinygo4j \
     -e GO111MODULE=on \
     -w /src tinygo/tinygo bash \
-    -c "tinygo build --no-debug -target=wasip1 -scheduler=asyncify -o /tmp/tmp.wasm . && cat /tmp/tmp.wasm" > \
+    -c "tinygo build --no-debug -target=wasip1 -o /tmp/tmp.wasm . && cat /tmp/tmp.wasm" > \
     ${SCRIPT_DIR}/compiled/${name}-wasi.wasm
 
 # docker run --rm \

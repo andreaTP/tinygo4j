@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -98,6 +100,7 @@ public class GoTest {
     @Test
     public void callbackWasiExample() {
         // Arrange
+        var resetInvoked = new AtomicInteger();
         var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/callback-wasi.wasm");
         var module = Parser.parse(wasm);
 
@@ -113,9 +116,9 @@ public class GoTest {
                                             var ref = (int) args[0];
                                             var str = (String) goInst.getJavaObj(ref);
 
-                                            System.out.println("Got " + str + ", resetting.");
-
                                             goInst.setJavaObj(ref, "0");
+
+                                            resetInvoked.set(Integer.valueOf(str));
                                             return null;
                                         })
                         }
@@ -126,5 +129,6 @@ public class GoTest {
         go.run();
 
         // Assert
+        assertEquals(11, resetInvoked.get());
     }
 }
