@@ -7,3 +7,4 @@ replace github.com/andreatp/tinygo4j => ../tinygo4j
 require github.com/andreatp/tinygo4j v0.0.0-00010101000000-000000000000
 
 
+

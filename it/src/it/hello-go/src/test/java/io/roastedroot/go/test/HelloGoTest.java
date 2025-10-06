@@ -56,6 +56,7 @@ class HelloGoTest {
         GoApi goApi;
 
         JsTest() {
+            var module = null // TODO: craft a go project that will use this API
             var javaApi = new JavaApi();
             var go = Go.builder(module)
                 .withWasi()
@@ -81,39 +82,40 @@ class HelloGoTest {
         }
     }
 
-    @Test
-    public void helloJsModule() {
-        // Arrange
-        var helloJs = new JsTest();
+    // Those tests should be ported to Go
+    // @Test
+    // public void helloJsModule() {
+    //     // Arrange
+    //     var helloJs = new JsTest();
 
-        // Act
-        helloJs.exec("from_java.my_java_check(from_java.my_java_func(40, 2));");
+    //     // Act
+    //     helloJs.exec("from_java.my_java_check(from_java.my_java_func(40, 2));");
 
-        // Assert
-        assertTrue(helloJs.isInvoked());
-    }
+    //     // Assert
+    //     assertTrue(helloJs.isInvoked());
+    // }
 
-    @Test
-    public void useJavaRefs() {
-        // Arrange
-        var helloJs = new JsTest();
+    // @Test
+    // public void useJavaRefs() {
+    //     // Arrange
+    //     var helloJs = new JsTest();
 
-        // Act
-        helloJs.exec("from_java.my_java_ref_check(from_java.my_java_ref());");
+    //     // Act
+    //     helloJs.exec("from_java.my_java_ref_check(from_java.my_java_ref());");
 
-        // assert
-        assertTrue(helloJs.isRefInvoked());
-    }
+    //     // assert
+    //     assertTrue(helloJs.isRefInvoked());
+    // }
 
-    @Test
-    public void useInvokables() {
-        // Arrange
-        var helloJs = new JsTest();
+    // @Test
+    // public void useInvokables() {
+    //     // Arrange
+    //     var helloJs = new JsTest();
 
-        // Act
-        var result = helloJs.sub(5, 2);
+    //     // Act
+    //     var result = helloJs.sub(5, 2);
 
-        // assert
-        assertEquals(3, result);
-    }
+    //     // assert
+    //     assertEquals(3, result);
+    // }
 }
