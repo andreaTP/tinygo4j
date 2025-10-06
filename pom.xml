@@ -31,6 +31,9 @@
 
   <modules>
     <module>core</module>
+    <module>annotations</module>
+    <module>processor</module>
+    <module>it</module>
   </modules>
 
   <scm>
