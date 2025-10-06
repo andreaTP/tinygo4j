@@ -1,5 +1,5 @@
-.PHONY: all import usage export callback slices usage main withdep
-all: import usage export callback slices usage main withdep
+.PHONY: all import usage export callback slices usage main withdep datatypes
+all: import usage export callback slices usage main withdep datatypes
 
 import:
 	./build.sh import
@@ -21,6 +21,9 @@ main:
 
 withdep:
 	./build.sh withdep
+
+datatypes:
+	./build.sh datatypes
 
 clean:
 	rm -rf compiled/*

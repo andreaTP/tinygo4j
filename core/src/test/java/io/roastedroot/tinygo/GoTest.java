@@ -234,4 +234,64 @@ public class GoTest {
         // Assert
         assertArrayEquals(expectedResult, result);
     }
+
+    @Test
+    public void datatypesWasiExample() {
+        // Arrange
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/datatypes-wasi.wasm");
+        var module = Parser.parse(wasm);
+
+        var go = Go.builder(module).withWasi().build();
+
+        // Act
+        go.run();
+
+        // String
+        var strRef = go.allocJavaObj("hello");
+        var outStrRef = (int) go.exec("roundtripString", new long[] {strRef})[0];
+        var outStr = (String) go.getJavaObj(outStrRef);
+        assertEquals("hello", outStr);
+
+        // Bytes
+        var bytesIn = new byte[] {1, 2, 3, 4};
+        var bytesRef = go.allocJavaObj(bytesIn);
+        var outBytesRef = (int) go.exec("roundtripBytes", new long[] {bytesRef})[0];
+        var outBytes = (byte[]) go.getJavaObj(outBytesRef);
+        assertArrayEquals(bytesIn, outBytes);
+
+        // Uint32
+        var u32In = 123_456_789;
+        var u32Ref = go.allocJavaObj(u32In);
+        var outU32Ref = (int) go.exec("roundtripUint32", new long[] {u32Ref})[0];
+        var outU32 = (int) go.getJavaObj(outU32Ref);
+        assertEquals(u32In, outU32);
+
+        // Uint64 (kept within 32-bit safe range due to host return width)
+        var u64In = 987_654_321L;
+        var u64Ref = go.allocJavaObj(u64In);
+        var outU64Ref = (int) go.exec("roundtripUint64", new long[] {u64Ref})[0];
+        var outU64 = (long) go.getJavaObj(outU64Ref);
+        assertEquals(u64In, outU64);
+
+        // Float32
+        var f32In = 1.5f;
+        var f32Ref = go.allocJavaObj(f32In);
+        var outF32Ref = (int) go.exec("roundtripFloat32", new long[] {f32Ref})[0];
+        var outF32 = (float) go.getJavaObj(outF32Ref);
+        assertEquals(f32In, outF32);
+
+        // Float64
+        var f64In = 3.25d;
+        var f64Ref = go.allocJavaObj(f64In);
+        var outF64Ref = (int) go.exec("roundtripFloat64", new long[] {f64Ref})[0];
+        var outF64 = (double) go.getJavaObj(outF64Ref);
+        assertEquals(f64In, outF64);
+
+        // Bool
+        var bIn = true;
+        var bRef = go.allocJavaObj(bIn);
+        var outBRef = (int) go.exec("roundtripBool", new long[] {bRef})[0];
+        var outB = (boolean) go.getJavaObj(outBRef);
+        assertTrue(outB);
+    }
 }
