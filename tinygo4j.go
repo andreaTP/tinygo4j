@@ -29,6 +29,11 @@ func (set SetBuilder) String(str string) JavaRef {
 	return set.ref
 }
 
+func (set SetBuilder) Bytes(bytes []byte) JavaRef {
+	setJavaBytes(set.ref, unsafe.Pointer(&bytes[0]), uint32(len(bytes)))
+	return set.ref
+}
+
 func (set SetBuilder) Bool(v bool) JavaRef {
 	setJavaBool(set.ref, v)
 	return set.ref
@@ -50,6 +55,21 @@ func (ref JavaRef) AsString() string {
 	return result
 }
 
+func (ref JavaRef) AsBytes() []byte {
+	v := asGoBytes(ref)
+	ptr := unsafe.Pointer(uintptr(uint32(v >> 32)))
+	length := int(uint32(v))
+
+	if ptr == nil || length == 0 {
+		return []byte{}
+	}
+
+	buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
+
+	C.free(ptr)
+	return buffer
+}
+
 func (ref JavaRef) AsBool() bool {
 	return asGoBool(ref)
 }
@@ -64,8 +84,14 @@ func allocJava() JavaRef
 //go:wasmimport env setJavaString
 func setJavaString(ref JavaRef, str string)
 
+//go:wasmimport env setJavaBytes
+func setJavaBytes(ref JavaRef, bytesPtr unsafe.Pointer, len uint32)
+
 //go:wasmimport env asGoString
 func asGoString(str JavaRef) uint64
+
+//go:wasmimport env asGoBytes
+func asGoBytes(str JavaRef) uint64
 
 //go:wasmimport env setJavaBool
 func setJavaBool(ref JavaRef, v bool)

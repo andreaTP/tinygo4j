@@ -1,5 +1,6 @@
 package io.roastedroot.tinygo;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,6 +14,8 @@ import com.dylibso.chicory.wasm.types.FunctionType;
 import com.dylibso.chicory.wasm.types.ValType;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -211,5 +214,24 @@ public class GoTest {
 
         // Assert
         assertEquals("[1 2 3]\n", stdout.toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void withdepWasiExample() throws Exception {
+        // Arrange
+        var expectedResult = GoTest.class.getResourceAsStream("/qrcode.png").readAllBytes();
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/withdep-wasi.wasm");
+        var module = Parser.parse(wasm);
+
+        var go = Go.builder(module).withWasi().build();
+
+        // Act
+        go.run();
+        var url = go.allocJavaObj("https://chicory.dev");
+        var resultRef = (int) go.exec("genqr", new long[] {url})[0];
+        var result = (byte[]) go.getJavaObj(resultRef);
+
+        // Assert
+        assertArrayEquals(expectedResult, result);
     }
 }

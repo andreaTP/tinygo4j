@@ -135,6 +135,20 @@ public final class Go {
                         goInstance.setJavaObj(ref, str);
                         return null;
                     }),
+                new HostFunction(
+                        "env",
+                        "setJavaBytes",
+                        FunctionType.of(List.of(ValType.I32, ValType.I32, ValType.I32), List.of()),
+                        (inst, args) -> {
+                            int ref = (int) args[0];
+                            int sPtr = (int) args[1];
+                            int sLen = (int) args[2];
+
+                            var bytes = inst.memory().readBytes(sPtr, sLen);
+
+                            goInstance.setJavaObj(ref, bytes);
+                            return null;
+                        }),
             new HostFunction(
                     "env",
                     "asGoString",
@@ -150,6 +164,20 @@ public final class Go {
                         var resPtr = (((long) ptr) << 32) | (strBytes.length & 0xffffffffL);
                         return new long[] {resPtr};
                     }),
+                new HostFunction(
+                        "env",
+                        "asGoBytes",
+                        FunctionType.of(List.of(ValType.I32), List.of(ValType.I64)),
+                        (inst, args) -> {
+                            var ref = (int) args[0];
+                            var bytes = (byte[]) goInstance.getJavaObj(ref);
+
+                            var ptr = goInstance.goMalloc(bytes.length);
+                            inst.memory().write(ptr, bytes);
+
+                            var resPtr = (((long) ptr) << 32) | (bytes.length & 0xffffffffL);
+                            return new long[] {resPtr};
+                        }),
             new HostFunction(
                     "env",
                     "allocJavaBool",
