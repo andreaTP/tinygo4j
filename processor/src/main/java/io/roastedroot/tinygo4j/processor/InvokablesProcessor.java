@@ -1,4 +1,4 @@
-package io.roastedroot.quickjs4j.processor;
+package io.roastedroot.tinygo4j.processor;
 
 import static com.github.javaparser.StaticJavaParser.parseClassOrInterfaceType;
 import static com.github.javaparser.StaticJavaParser.parseType;
@@ -24,10 +24,10 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
-import io.roastedroot.quickjs4j.annotations.GuestFunction;
-import io.roastedroot.quickjs4j.annotations.HostRefParam;
-import io.roastedroot.quickjs4j.annotations.Invokables;
-import io.roastedroot.quickjs4j.annotations.ReturnsHostRef;
+import io.roastedroot.tinygo4j.annotations.GuestFunction;
+import io.roastedroot.tinygo4j.annotations.HostRefParam;
+import io.roastedroot.tinygo4j.annotations.Invokables;
+import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 
-public final class InvokablesProcessor extends Quickjs4jAbstractProcessor {
+public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {

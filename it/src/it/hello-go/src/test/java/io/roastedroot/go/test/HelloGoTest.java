@@ -1,7 +1,6 @@
 package chicory.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.roastedroot.tinygo4j.annotations.Builtins;
 import io.roastedroot.tinygo4j.annotations.GuestFunction;
@@ -9,9 +8,6 @@ import io.roastedroot.tinygo4j.annotations.HostFunction;
 import io.roastedroot.tinygo4j.annotations.HostRefParam;
 import io.roastedroot.tinygo4j.annotations.Invokables;
 import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
-import io.roastedroot.tinygo4j.core.Engine;
-import io.roastedroot.tinygo4j.core.Runner;
-import org.junit.jupiter.api.Test;
 
 class HelloGoTest {
 
@@ -51,17 +47,18 @@ class HelloGoTest {
         }
     }
 
-    class JsTest {
+    class GoTest {
 
-        GoApi goApi;
+        private final GoApi goApi;
 
-        JsTest() {
-            var module = null // TODO: craft a go project that will use this API
+        GoTest() {
+            var module = null; // TODO: craft a go project that will use this API
             var javaApi = new JavaApi();
-            var go = Go.builder(module)
-                .withWasi()
-                .withAdditionalImport(JavaApi_Builtins.toBuiltins(this.javaApi))
-                .build();
+            var go =
+                    Go.builder(module)
+                            .withWasi()
+                            .withAdditionalImport(JavaApi_Builtins.toBuiltins(this.javaApi))
+                            .build();
             this.goApi = GoApi_Invokables.create(go);
         }
 

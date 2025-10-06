@@ -16,6 +16,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.github.javaparser</groupId>
+      <artifactId>javaparser-core</artifactId>
+      <version>${javaparser.version}</version>
+    </dependency>
+    <dependency>
       <groupId>io.roastedroot</groupId>
       <artifactId>tinygo4j-annotations</artifactId>
       <version>${project.version}</version>

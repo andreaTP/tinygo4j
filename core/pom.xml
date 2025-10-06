@@ -4,14 +4,14 @@
 
   <parent>
     <groupId>io.roastedroot</groupId>
-    <artifactId>tinygo_wasm4j-parent</artifactId>
+    <artifactId>tinygo4j-parent</artifactId>
     <version>999-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>tinygo_wasm4j</artifactId>
+  <artifactId>tinygo4j</artifactId>
   <packaging>jar</packaging>
-  <name>tinygo_wasm4j</name>
+  <name>tinygo4j</name>
 
   <dependencies>
     <dependency>
