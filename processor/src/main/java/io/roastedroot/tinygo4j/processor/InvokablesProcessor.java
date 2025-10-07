@@ -1,6 +1,5 @@
 package io.roastedroot.tinygo4j.processor;
 
-import static com.github.javaparser.StaticJavaParser.parseClassOrInterfaceType;
 import static com.github.javaparser.StaticJavaParser.parseType;
 import static java.lang.String.format;
 import static javax.tools.Diagnostic.Kind.ERROR;
@@ -10,19 +9,20 @@ import com.github.javaparser.ast.ArrayCreationLevel;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.expr.ArrayAccessExpr;
 import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.CastExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
-import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import io.roastedroot.tinygo4j.annotations.GuestFunction;
 import io.roastedroot.tinygo4j.annotations.HostRefParam;
@@ -69,12 +69,7 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
             cu.addImport(type.getQualifiedName().toString());
         }
 
-        cu.addImport("io.roastedroot.quickjs4j.core.Runner");
-        cu.addImport("io.roastedroot.quickjs4j.core.Invokables");
-        cu.addImport("io.roastedroot.quickjs4j.core.GuestFunction");
-        // TODO: verify HostRefs in GuestFunctions
-        cu.addImport("io.roastedroot.quickjs4j.core.HostRef");
-        cu.addImport(List.class);
+        cu.addImport("io.roastedroot.tinygo.Go");
 
         var typeName = type.getSimpleName().toString();
         var processorName = new StringLiteralExpr(getClass().getName());
@@ -86,26 +81,16 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
                         .addImplementedType(typeName)
                         .addSingleMemberAnnotation(Generated.class, processorName);
 
-        classDef.addField(String.class, "jsLibrary", Modifier.Keyword.FINAL);
-        classDef.addField("io.roastedroot.quickjs4j.core.Runner", "runner", Modifier.Keyword.FINAL);
+        classDef.addField(parseType("Go"), "go", Modifier.Keyword.FINAL);
 
-        var constructor =
-                classDef.addConstructor()
-                        .addParameter(String.class, "jsLibrary")
-                        .addParameter("io.roastedroot.quickjs4j.core.Runner", "runner")
-                        .setPrivate(true);
+        var constructor = classDef.addConstructor().addParameter("Go", "go").setPrivate(true);
 
         constructor
                 .createBody()
                 .addStatement(
                         new AssignExpr(
-                                new FieldAccessExpr(new ThisExpr(), "jsLibrary"),
-                                new NameExpr("jsLibrary"),
-                                AssignExpr.Operator.ASSIGN))
-                .addStatement(
-                        new AssignExpr(
-                                new FieldAccessExpr(new ThisExpr(), "runner"),
-                                new NameExpr("runner"),
+                                new FieldAccessExpr(new ThisExpr(), "go"),
+                                new NameExpr("go"),
                                 AssignExpr.Operator.ASSIGN));
 
         List<Expression> functions = new ArrayList<>();
@@ -125,31 +110,71 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
 
                 NodeList<Expression> arguments = NodeList.nodeList();
                 for (int i = 0; i < executable.getParameters().size(); i++) {
-                    overriddenMethod.addParameter(
-                            executable.getParameters().get(i).asType().toString(), "arg" + i);
-                    arguments.add(new NameExpr("arg" + i));
+                    var param = executable.getParameters().get(i);
+                    var typeLiteral = param.asType().toString();
+                    overriddenMethod.addParameter(typeLiteral, "arg" + i);
+                    switch (typeLiteral) {
+                        case "long":
+                        case "int":
+                            arguments.add(new NameExpr("arg" + i));
+                            break;
+                        case "float":
+                            arguments.add(
+                                    new MethodCallExpr(
+                                            new NameExpr("Value"),
+                                            new SimpleName("longToFloat"),
+                                            NodeList.nodeList(new NameExpr("arg" + i))));
+                            break;
+                        case "double":
+                            arguments.add(
+                                    new MethodCallExpr(
+                                            new NameExpr("Value"),
+                                            new SimpleName("longToDouble"),
+                                            NodeList.nodeList(new NameExpr("arg" + i))));
+                            break;
+                        case "boolean":
+                            throw new IllegalArgumentException("TODO: implement me");
+                        default:
+                            if (annotatedWith(param, HostRefParam.class)) {
+                                throw new IllegalArgumentException("TODO: implement me");
+                            } else {
+                                throw new IllegalArgumentException(
+                                        "unsupported parameter type: " + typeLiteral);
+                            }
+                    }
                 }
-                var argsList =
-                        new MethodCallExpr(new NameExpr("List"), new SimpleName("of"), arguments);
 
                 var methodBody = overriddenMethod.createBody();
 
                 var invocationHandle =
                         new MethodCallExpr(
-                                new NameExpr("runner"),
-                                new SimpleName("invokeGuestFunction"),
+                                new NameExpr("go"),
+                                new SimpleName("exec"),
                                 NodeList.nodeList(
-                                        new StringLiteralExpr(moduleName),
                                         new StringLiteralExpr(name),
-                                        argsList,
-                                        new NameExpr("jsLibrary")));
+                                        new ArrayCreationExpr(
+                                                parseType("long"),
+                                                new NodeList<>(new ArrayCreationLevel()),
+                                                new ArrayInitializerExpr(
+                                                        NodeList.nodeList(arguments)))));
 
                 var hasReturn = extractHasReturn(executable);
                 if (hasReturn) {
                     var returnType = parseType(executable.getReturnType().toString());
+
                     overriddenMethod.setType(returnType);
                     methodBody.addStatement(
-                            new ReturnStmt(new CastExpr(returnType, invocationHandle)));
+                            new ReturnStmt(
+                                    new CastExpr(
+                                            returnType,
+                                            new ArrayAccessExpr(
+                                                    invocationHandle, new IntegerLiteralExpr(0)))));
+
+                    //                    if (annotatedWith(executable, ReturnsHostRef.class)) {
+                    //
+                    //                    } else {
+                    //
+                    //                    }
                 } else {
                     methodBody.addStatement(invocationHandle);
                 }
@@ -157,47 +182,6 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
                 functions.add(processGuestFunction((ExecutableElement) member));
             }
         }
-
-        var newJsFunctions =
-                new ArrayCreationExpr(
-                        parseType("GuestFunction"),
-                        new NodeList<>(new ArrayCreationLevel()),
-                        new ArrayInitializerExpr(NodeList.nodeList(functions)));
-
-        var invokablesCreationHandle =
-                new MethodCallExpr(
-                        new MethodCallExpr(
-                                new MethodCallExpr(
-                                        new NameExpr("Invokables"),
-                                        new SimpleName("builder"),
-                                        NodeList.nodeList(new StringLiteralExpr(moduleName))),
-                                new SimpleName("add"),
-                                NodeList.nodeList(newJsFunctions)),
-                        new SimpleName("build"),
-                        NodeList.nodeList());
-
-        classDef.addMethod("toInvokables")
-                .setPublic(true)
-                .setStatic(true)
-                .setType("Invokables")
-                .setBody(new BlockStmt(new NodeList<>(new ReturnStmt(invokablesCreationHandle))));
-
-        classDef.addMethod("create")
-                .setPublic(true)
-                .setStatic(true)
-                .addParameter(String.class, "jsLibrary")
-                .addParameter("io.roastedroot.quickjs4j.core.Runner", "runner")
-                .setType(typeName)
-                .setBody(
-                        new BlockStmt(
-                                new NodeList<>(
-                                        new ReturnStmt(
-                                                new ObjectCreationExpr(
-                                                        null,
-                                                        parseClassOrInterfaceType(className),
-                                                        NodeList.nodeList(
-                                                                new NameExpr("jsLibrary"),
-                                                                new NameExpr("runner")))))));
 
         String prefix = (pkg.isUnnamed()) ? "" : packageName + ".";
         String qualifiedName = prefix + type.getSimpleName() + "_Invokables";

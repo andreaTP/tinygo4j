@@ -6,4 +6,4 @@
 - high level API
 - support for Json in-out?
 - wasm-unknown support?
-- annotation processing: need to test at least all the supported params and returns!
+- annotation processing: need to test at least all the supported params and returns! also for invokables

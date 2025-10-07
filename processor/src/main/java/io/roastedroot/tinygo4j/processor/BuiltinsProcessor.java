@@ -10,6 +10,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.ArrayAccessExpr;
 import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
@@ -155,40 +156,6 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         }
     }
 
-    private Expression extractReturn(ExecutableElement executable) {
-        String returnName = executable.getReturnType().toString();
-        Expression returnType;
-        switch (returnName) {
-            case "void":
-                returnType = new FieldAccessExpr(new NameExpr("java.lang.Void"), "class");
-                break;
-            case "int":
-                returnType = addPrimitiveReturn("java.lang.Integer");
-                break;
-            case "long":
-                returnType = addPrimitiveReturn("java.lang.Long");
-                break;
-            case "double":
-                returnType = addPrimitiveReturn("java.lang.Double");
-                break;
-            case "float":
-                returnType = addPrimitiveReturn("java.lang.Float");
-                break;
-            case "boolean":
-                returnType = addPrimitiveReturn("java.lang.Boolean");
-                break;
-            default:
-                if (annotatedWith(executable, ReturnsHostRef.class)) {
-                    var javaRefType = "io.roastedroot.quickjs4j.core.HostRef";
-                    returnType = new FieldAccessExpr(new NameExpr(javaRefType), "class");
-                } else {
-                    throw new IllegalArgumentException("unsupported return type: " + returnName);
-                }
-                break;
-        }
-        return returnType;
-    }
-
     private Expression processHostFunction(ExecutableElement executable, String moduleName) {
         // compute function name
         var name = executable.getAnnotation(HostFunction.class).value();
@@ -310,7 +277,13 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
 
             handleBody
                     .addStatement(new ExpressionStmt(new VariableDeclarationExpr(result)))
-                    .addStatement(new ReturnStmt(new NameExpr("result")));
+                    .addStatement(
+                            new ReturnStmt(
+                                    new ArrayCreationExpr(
+                                            parseType("long"),
+                                            new NodeList<>(new ArrayCreationLevel()),
+                                            new ArrayInitializerExpr(
+                                                    NodeList.nodeList(new NameExpr("result"))))));
         }
 
         // lambda for js function binding
@@ -351,9 +324,6 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
     }
 
     private static Expression argExpr(int n) {
-        return new MethodCallExpr(
-                new NameExpr("args"),
-                new SimpleName("get"),
-                NodeList.nodeList(new IntegerLiteralExpr(String.valueOf(n))));
+        return new ArrayAccessExpr(new NameExpr("args"), new IntegerLiteralExpr(n));
     }
 }
