@@ -12,6 +12,7 @@ import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.CastExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
@@ -36,6 +37,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -79,12 +81,17 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
             cu.addImport(type.getQualifiedName().toString());
         }
 
+        cu.addImport(List.class);
+        cu.addImport(Function.class);
+
         cu.addImport("com.dylibso.chicory.wasm.types.FunctionType");
         cu.addImport("com.dylibso.chicory.wasm.types.ValType");
         cu.addImport("com.dylibso.chicory.wasm.types.Value");
         cu.addImport("com.dylibso.chicory.runtime.HostFunction");
+        cu.addImport("com.dylibso.chicory.runtime.Instance");
         cu.addImport("com.dylibso.chicory.runtime.ImportFunction");
-        cu.addImport(List.class);
+
+        cu.addImport("io.roastedroot.tinygo.Go");
 
         var typeName = type.getSimpleName().toString();
         var processorName = new StringLiteralExpr(getClass().getName());
@@ -104,7 +111,9 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
 
         var builtinsCreationHandle =
                 new LambdaExpr(
-                        new Parameter(parseType("Go"), new SimpleName("goInst")), newGoFunctions);
+                                new Parameter(parseType("Go"), new SimpleName("goInst")),
+                                newGoFunctions)
+                        .setEnclosingParameters(true);
 
         classDef.addMethod("toAdditionalImports")
                 .setPublic(true)
@@ -131,6 +140,19 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
 
     private Expression addPrimitiveReturn(String typeLiteral) {
         return new FieldAccessExpr(new NameExpr(typeLiteral), "class");
+    }
+
+    private Expression extractWasmType(String name) {
+        switch (name) {
+            case "float":
+                return new FieldAccessExpr(new NameExpr("ValType"), "F32");
+            case "double":
+                return new FieldAccessExpr(new NameExpr("ValType"), "F64");
+            case "long":
+                return new FieldAccessExpr(new NameExpr("ValType"), "I64");
+            default:
+                return new FieldAccessExpr(new NameExpr("ValType"), "I32");
+        }
     }
 
     private Expression extractReturn(ExecutableElement executable) {
@@ -160,7 +182,7 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
                     var javaRefType = "io.roastedroot.quickjs4j.core.HostRef";
                     returnType = new FieldAccessExpr(new NameExpr(javaRefType), "class");
                 } else {
-                    returnType = new FieldAccessExpr(new NameExpr(returnName), "class");
+                    throw new IllegalArgumentException("unsupported return type: " + returnName);
                 }
                 break;
         }
@@ -179,38 +201,57 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         // duplicated to automatically compute arguments
         NodeList<Expression> arguments = new NodeList<>();
         for (VariableElement parameter : executable.getParameters()) {
+            paramTypes.add(extractWasmType(parameter.asType().toString()));
             switch (parameter.asType().toString()) {
                 case "int":
-                    addPrimitiveParam("java.lang.Integer", paramTypes, arguments);
+                    arguments.add(new CastExpr(parseType("int"), argExpr(paramTypes.size())));
                     break;
                 case "long":
-                    addPrimitiveParam("java.lang.Long", paramTypes, arguments);
-                    break;
-                case "double":
-                    addPrimitiveParam("java.lang.Double", paramTypes, arguments);
+                    arguments.add(argExpr(paramTypes.size()));
                     break;
                 case "float":
-                    addPrimitiveParam("java.lang.Float", paramTypes, arguments);
+                    arguments.add(
+                            new MethodCallExpr(
+                                    new NameExpr("Value"),
+                                    new SimpleName("longToFloat"),
+                                    NodeList.nodeList(argExpr(paramTypes.size()))));
+                    break;
+                case "double":
+                    arguments.add(
+                            new MethodCallExpr(
+                                    new NameExpr("Value"),
+                                    new SimpleName("longToDouble"),
+                                    NodeList.nodeList(argExpr(paramTypes.size()))));
                     break;
                 case "boolean":
-                    addPrimitiveParam("java.lang.Boolean", paramTypes, arguments);
+                    arguments.add(
+                            new BinaryExpr(
+                                    argExpr(paramTypes.size()),
+                                    new IntegerLiteralExpr(0),
+                                    BinaryExpr.Operator.GREATER));
                     break;
                 default:
                     var typeLiteral = parameter.asType().toString();
-                    var type = parseType(parameter.asType().toString());
-                    arguments.add(new CastExpr(type, argExpr(paramTypes.size())));
                     if (annotatedWith(parameter, HostRefParam.class)) {
-                        var javaRefType = "io.roastedroot.quickjs4j.core.HostRef";
-                        paramTypes.add(new FieldAccessExpr(new NameExpr(javaRefType), "class"));
+                        var jObj =
+                                new MethodCallExpr(
+                                        new NameExpr("goInst"),
+                                        new SimpleName("getJavaObj"),
+                                        NodeList.nodeList(
+                                                new CastExpr(
+                                                        parseType("int"),
+                                                        argExpr(paramTypes.size()))));
+                        arguments.add(new CastExpr(parseType(typeLiteral), jObj));
                     } else {
-                        paramTypes.add(new FieldAccessExpr(new NameExpr(typeLiteral), "class"));
+                        throw new IllegalArgumentException(
+                                "unsupported parameter type: " + typeLiteral);
                     }
             }
         }
 
         // compute return type and conversion
-        Expression returnType = extractReturn(executable);
         boolean hasReturn = extractHasReturn(executable);
+        Expression returnType = null;
 
         // function invocation
         Expression invocation =
@@ -224,9 +265,49 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         if (!hasReturn) {
             handleBody.addStatement(invocation).addStatement(new ReturnStmt(new NullLiteralExpr()));
         } else {
-            var result =
-                    new VariableDeclarator(
-                            parseType(executable.getReturnType().toString()), "result", invocation);
+            returnType = extractWasmType(executable.getReturnType().toString());
+            VariableDeclarator result;
+
+            switch (executable.getReturnType().toString()) {
+                case "int":
+                case "long":
+                case "float":
+                case "double":
+                    result =
+                            new VariableDeclarator(
+                                    parseType(executable.getReturnType().toString()),
+                                    "result",
+                                    invocation);
+                    break;
+                case "boolean":
+                    result =
+                            new VariableDeclarator(
+                                    parseType("int"),
+                                    "result",
+                                    new BinaryExpr(
+                                            invocation,
+                                            new IntegerLiteralExpr(0),
+                                            BinaryExpr.Operator.GREATER));
+                    break;
+                default:
+                    if (annotatedWith(executable, ReturnsHostRef.class)) {
+                        // TODO: verify what happens when I want to re-use an incoming reference?
+                        result =
+                                new VariableDeclarator(
+                                        parseType("int"),
+                                        "result",
+                                        new MethodCallExpr(
+                                                new NameExpr("goInst"),
+                                                new SimpleName("allocJavaObj"),
+                                                NodeList.nodeList(invocation)));
+                        break;
+                    } else {
+                        throw new IllegalArgumentException(
+                                "unsupported return type: "
+                                        + executable.getReturnType().toString());
+                    }
+            }
+
             handleBody
                     .addStatement(new ExpressionStmt(new VariableDeclarationExpr(result)))
                     .addStatement(new ReturnStmt(new NameExpr("result")));
@@ -235,17 +316,33 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         // lambda for js function binding
         var handle =
                 new LambdaExpr()
-                        .addParameter(new Parameter(parseType("List<Object>"), "args"))
+                        .addParameter("Instance", "inst")
+                        .addParameter("long[]", "args")
                         .setEnclosingParameters(true)
                         .setBody(handleBody);
+
+        // function signature
+        var functionSignature =
+                new MethodCallExpr(
+                        new NameExpr("FunctionType"),
+                        "of",
+                        NodeList.nodeList(
+                                new MethodCallExpr(new NameExpr("List"), "of", paramTypes),
+                                (hasReturn)
+                                        ? new MethodCallExpr(
+                                                new NameExpr("List"),
+                                                "of",
+                                                NodeList.nodeList(returnType))
+                                        : new MethodCallExpr(
+                                                new NameExpr("List"), "of", NodeList.nodeList())));
 
         // create Js function
         var function =
                 new ObjectCreationExpr()
                         .setType("HostFunction")
+                        .addArgument(new StringLiteralExpr(moduleName))
                         .addArgument(new StringLiteralExpr(name))
-                        .addArgument(new MethodCallExpr(new NameExpr("List"), "of", paramTypes))
-                        .addArgument(returnType)
+                        .addArgument(functionSignature)
                         .addArgument(handle);
 
         function.setLineComment("");

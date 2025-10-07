@@ -22,6 +22,7 @@ class HelloGoTest {
         public boolean invoked;
         public boolean refInvoked;
 
+        @ReturnsHostRef
         @HostFunction("my_java_func")
         public String add(int x, int y) {
             var sum = x + y;
@@ -29,7 +30,7 @@ class HelloGoTest {
         }
 
         @HostFunction("my_java_check")
-        public void check(String value) {
+        public void check(@HostRefParam String value) {
             invoked = true;
             assertEquals("hello 42", value);
         }
