@@ -1,6 +1,7 @@
 package chicory.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.dylibso.chicory.wasm.Parser;
 import io.roastedroot.tinygo.Go;
@@ -11,6 +12,7 @@ import io.roastedroot.tinygo4j.annotations.HostRefParam;
 import io.roastedroot.tinygo4j.annotations.Invokables;
 import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
 import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
 
 class HelloGoTest {
 
@@ -59,7 +61,8 @@ class HelloGoTest {
         GoTest() {
             var module =
                     Parser.parse(
-                            Path.of("core/src/test/resources/wasm/compiled/hello-it-wasi.wasm"));
+                            Path.of(
+                                    "../../../../core/src/test/resources/wasm/compiled/hello-it-wasi.wasm"));
             this.javaApi = new JavaApi();
             this.go =
                     Go.builder(module)
@@ -69,6 +72,18 @@ class HelloGoTest {
                             .build();
             this.goApi = GoApi_Invokables.create(go);
         }
+    }
+
+    @Test
+    public void test1() {
+        // Arrange
+        var helloGo = new GoTest();
+
+        // Act
+        helloGo.goApi.test1();
+
+        // Assert
+        assertTrue(helloGo.javaApi.invoked);
     }
 
     // Those tests should be ported to Go

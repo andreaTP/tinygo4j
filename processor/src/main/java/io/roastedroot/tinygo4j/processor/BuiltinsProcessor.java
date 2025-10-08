@@ -132,17 +132,6 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         }
     }
 
-    private void addPrimitiveParam(
-            String typeLiteral, NodeList<Expression> paramTypes, NodeList<Expression> arguments) {
-        var type = parseType(typeLiteral);
-        arguments.add(new CastExpr(type, argExpr(paramTypes.size())));
-        paramTypes.add(new FieldAccessExpr(new NameExpr(typeLiteral), "class"));
-    }
-
-    private Expression addPrimitiveReturn(String typeLiteral) {
-        return new FieldAccessExpr(new NameExpr(typeLiteral), "class");
-    }
-
     private Expression extractWasmType(String name) {
         switch (name) {
             case "float":
@@ -168,7 +157,6 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         // duplicated to automatically compute arguments
         NodeList<Expression> arguments = new NodeList<>();
         for (VariableElement parameter : executable.getParameters()) {
-            paramTypes.add(extractWasmType(parameter.asType().toString()));
             switch (parameter.asType().toString()) {
                 case "int":
                     arguments.add(new CastExpr(parseType("int"), argExpr(paramTypes.size())));
@@ -214,6 +202,7 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
                                 "unsupported parameter type: " + typeLiteral);
                     }
             }
+            paramTypes.add(extractWasmType(parameter.asType().toString()));
         }
 
         // compute return type and conversion

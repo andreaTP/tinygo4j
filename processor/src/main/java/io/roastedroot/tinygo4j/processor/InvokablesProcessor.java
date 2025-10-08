@@ -185,15 +185,17 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
             }
         }
 
-        classDef.addMethod(
-                        "create", Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC)
+        classDef.addMethod("create", Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC)
                 .setType(typeName)
                 .addParameter(parseType("Go"), "go")
                 .setBody(
-                        new BlockStmt().addStatement(
-                                new ReturnStmt(
-                                new ObjectCreationExpr(null, parseClassOrInterfaceType(className), NodeList.nodeList(new NameExpr("go")))))
-                );
+                        new BlockStmt()
+                                .addStatement(
+                                        new ReturnStmt(
+                                                new ObjectCreationExpr(
+                                                        null,
+                                                        parseClassOrInterfaceType(className),
+                                                        NodeList.nodeList(new NameExpr("go"))))));
 
         String prefix = (pkg.isUnnamed()) ? "" : packageName + ".";
         String qualifiedName = prefix + type.getSimpleName() + "_Invokables";
