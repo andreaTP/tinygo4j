@@ -21,5 +21,10 @@ func test1() {
 	myJavaCheck(myJavaFunc(40, 2))
 }
 
+//export test2
+func test2() {
+	myJavaRefCheck(myJavaRef());
+}
+
 func main() {
 }

@@ -20,6 +20,9 @@ class HelloGoTest {
     interface GoApi {
         @GuestFunction
         void test1();
+
+        @GuestFunction
+        void test2();
     }
 
     @Builtins("from_java")
@@ -86,40 +89,15 @@ class HelloGoTest {
         assertTrue(helloGo.javaApi.invoked);
     }
 
-    // Those tests should be ported to Go
-    // @Test
-    // public void helloJsModule() {
-    //     // Arrange
-    //     var helloJs = new JsTest();
+    @Test
+    public void test2() {
+        // Arrange
+        var helloGo = new GoTest();
 
-    //     // Act
-    //     helloJs.exec("from_java.my_java_check(from_java.my_java_func(40, 2));");
+        // Act
+        helloGo.goApi.test2();
 
-    //     // Assert
-    //     assertTrue(helloJs.isInvoked());
-    // }
-
-    // @Test
-    // public void useJavaRefs() {
-    //     // Arrange
-    //     var helloJs = new JsTest();
-
-    //     // Act
-    //     helloJs.exec("from_java.my_java_ref_check(from_java.my_java_ref());");
-
-    //     // assert
-    //     assertTrue(helloJs.isRefInvoked());
-    // }
-
-    // @Test
-    // public void useInvokables() {
-    //     // Arrange
-    //     var helloJs = new JsTest();
-
-    //     // Act
-    //     var result = helloJs.sub(5, 2);
-
-    //     // assert
-    //     assertEquals(3, result);
-    // }
+        // Assert
+        assertTrue(helloGo.javaApi.refInvoked);
+    }
 }
