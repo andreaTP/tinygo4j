@@ -55,6 +55,22 @@ public class GoTest {
     }
 
     @Test
+    public void importUnknownExample() {
+        // Arrange
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/import-wasm-unknown.wasm");
+        var module = Parser.parse(wasm);
+
+        var go = Go.builder(module).build();
+
+        // Act
+        go.run();
+        var result = go.exec("operation", new long[] {321})[0];
+
+        // Assert
+        assertEquals(323, result);
+    }
+
+    @Test
     public void usageWasiExample() {
         // Arrange
         var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/usage-wasi.wasm");

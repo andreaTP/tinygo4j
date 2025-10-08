@@ -46,8 +46,15 @@ public final class Go {
                         .withMemoryFactory(ByteArrayMemory::new)
                         .withStart(false)
                         .build();
-        // TODO: this breaks on wasm-unknown
-        this.mallocFn = instance.exports().function("malloc");
+        ExportFunction mallocFn = null;
+        for (int i = 0; i < instance.module().exportSection().exportCount(); i++) {
+            var export = instance.module().exportSection().getExport(i);
+            if (export.name().equals("malloc")) {
+                mallocFn = instance.exports().function("malloc");
+                break;
+            }
+        }
+        this.mallocFn = mallocFn;
     }
 
     public static Builder builder(WasmModule module) {

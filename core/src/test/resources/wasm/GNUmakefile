@@ -2,7 +2,7 @@
 all: import usage export callback slices usage main withdep datatypes hello-it types-test
 
 import:
-	./build.sh import
+	./build.sh import unknown
 
 export:
 	./build.sh export
