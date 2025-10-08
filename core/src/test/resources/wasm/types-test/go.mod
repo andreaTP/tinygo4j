@@ -1,4 +1,4 @@
-module hello-it
+module types-test
 
 go 1.21.13
 

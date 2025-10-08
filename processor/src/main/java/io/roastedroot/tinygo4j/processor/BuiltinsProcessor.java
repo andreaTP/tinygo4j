@@ -264,15 +264,35 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
                     }
             }
 
-            handleBody
-                    .addStatement(new ExpressionStmt(new VariableDeclarationExpr(result)))
-                    .addStatement(
-                            new ReturnStmt(
-                                    new ArrayCreationExpr(
-                                            parseType("long"),
-                                            new NodeList<>(new ArrayCreationLevel()),
-                                            new ArrayInitializerExpr(
-                                                    NodeList.nodeList(new NameExpr("result"))))));
+            handleBody.addStatement(new ExpressionStmt(new VariableDeclarationExpr(result)));
+
+            // Convert result to long for WASM interface
+            Expression returnValue;
+            switch (executable.getReturnType().toString()) {
+                case "double":
+                    returnValue = new MethodCallExpr(
+                            new NameExpr("Value"),
+                            new SimpleName("doubleToLong"),
+                            NodeList.nodeList(new NameExpr("result")));
+                    break;
+                case "float":
+                    returnValue = new MethodCallExpr(
+                            new NameExpr("Value"),
+                            new SimpleName("floatToLong"),
+                            NodeList.nodeList(new NameExpr("result")));
+                    break;
+                default:
+                    returnValue = new NameExpr("result");
+                    break;
+            }
+
+            handleBody.addStatement(
+                    new ReturnStmt(
+                            new ArrayCreationExpr(
+                                    parseType("long"),
+                                    new NodeList<>(new ArrayCreationLevel()),
+                                    new ArrayInitializerExpr(
+                                            NodeList.nodeList(returnValue)))));
         }
 
         // lambda for js function binding
