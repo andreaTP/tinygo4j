@@ -1,4 +1,4 @@
-module tinygo4j-import
+module tinygo4j-export
 
 go 1.21.13
 
