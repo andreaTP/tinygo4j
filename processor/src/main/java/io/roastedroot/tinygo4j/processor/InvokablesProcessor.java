@@ -1,5 +1,6 @@
 package io.roastedroot.tinygo4j.processor;
 
+import static com.github.javaparser.StaticJavaParser.parseClassOrInterfaceType;
 import static com.github.javaparser.StaticJavaParser.parseType;
 import static java.lang.String.format;
 import static javax.tools.Diagnostic.Kind.ERROR;
@@ -23,6 +24,7 @@ import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
+import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import io.roastedroot.tinygo4j.annotations.GuestFunction;
 import io.roastedroot.tinygo4j.annotations.HostRefParam;
@@ -183,6 +185,16 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
             }
         }
 
+        classDef.addMethod(
+                        "create", Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC)
+                .setType(typeName)
+                .addParameter(parseType("Go"), "go")
+                .setBody(
+                        new BlockStmt().addStatement(
+                                new ReturnStmt(
+                                new ObjectCreationExpr(null, parseClassOrInterfaceType(className), NodeList.nodeList(new NameExpr("go")))))
+                );
+
         String prefix = (pkg.isUnnamed()) ? "" : packageName + ".";
         String qualifiedName = prefix + type.getSimpleName() + "_Invokables";
         try (Writer writer = filer().createSourceFile(qualifiedName, type).openWriter()) {
@@ -196,6 +208,7 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
         return new FieldAccessExpr(new NameExpr(typeLiteral), "class");
     }
 
+    // TODO: review this implementation is wrong
     private Expression extractReturn(ExecutableElement executable) {
         String returnName = executable.getReturnType().toString();
         Expression returnType;

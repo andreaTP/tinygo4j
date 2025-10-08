@@ -2,19 +2,22 @@ package chicory.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.dylibso.chicory.wasm.Parser;
+import io.roastedroot.tinygo.Go;
 import io.roastedroot.tinygo4j.annotations.Builtins;
 import io.roastedroot.tinygo4j.annotations.GuestFunction;
 import io.roastedroot.tinygo4j.annotations.HostFunction;
 import io.roastedroot.tinygo4j.annotations.HostRefParam;
 import io.roastedroot.tinygo4j.annotations.Invokables;
 import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
+import java.nio.file.Path;
 
 class HelloGoTest {
 
     @Invokables
     interface GoApi {
         @GuestFunction
-        int sub(int x, int y);
+        void test1();
     }
 
     @Builtins("from_java")
@@ -49,34 +52,22 @@ class HelloGoTest {
     }
 
     class GoTest {
-
+        private final Go go;
         private final GoApi goApi;
+        private final JavaApi javaApi;
 
         GoTest() {
-            var module = null; // TODO: craft a go project that will use this API
-            var javaApi = new JavaApi();
-            var go =
+            var module =
+                    Parser.parse(
+                            Path.of("core/src/test/resources/wasm/compiled/hello-it-wasi.wasm"));
+            this.javaApi = new JavaApi();
+            this.go =
                     Go.builder(module)
                             .withWasi()
-                            .withAdditionalImport(JavaApi_Builtins.toBuiltins(this.javaApi))
+                            .withAdditionalImport(
+                                    JavaApi_Builtins.toAdditionalImports(this.javaApi))
                             .build();
             this.goApi = GoApi_Invokables.create(go);
-        }
-
-        public void exec(String code) {
-            runner.compileAndExec(code);
-        }
-
-        public boolean isInvoked() {
-            return javaApi.invoked;
-        }
-
-        public boolean isRefInvoked() {
-            return javaApi.refInvoked;
-        }
-
-        public int sub(int x, int y) {
-            return goApi.sub(x, y);
         }
     }
 

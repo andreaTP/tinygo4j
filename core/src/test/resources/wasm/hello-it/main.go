@@ -1,8 +1,24 @@
 package main
 
+import (
+	"github.com/andreatp/tinygo4j"
+)
+
+//go:wasmimport from_java my_java_func
+func myJavaFunc(x, y uint32) tinygo4j.JavaRef
+
+//go:wasmimport from_java my_java_check
+func myJavaCheck(value tinygo4j.JavaRef)
+
+//go:wasmimport from_java my_java_ref
+func myJavaRef() tinygo4j.JavaRef
+
+//go:wasmimport from_java my_java_ref_check
+func myJavaRefCheck(value tinygo4j.JavaRef)
+
 //export test1
-func test1(i uint32) uint32 {
-	return i + 2
+func test1() {
+	myJavaCheck(myJavaFunc(40, 2))
 }
 
 func main() {
