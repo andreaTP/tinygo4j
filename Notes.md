@@ -5,7 +5,8 @@
 - extend the PDK API to cover more primitive data types - DONE
 - high level API - DONE
 - support for Json in-out? - not for now
-- wasm-unknown support?
-- annotation processing: need to test at least all the supported params and returns! also for invokables
-- fix packages names and clean up things
-- review possible leaks when doing allocRef in annotations generated code
+- wasm-unknown support - initial
+- annotation processing: need to test at least all the supported params and returns! also for invokables - DONE
+- annotation processing: fallback to long[]?
+- fix packages names and clean up things - DONE
+- review flow when doing allocRef in annotations generated code
