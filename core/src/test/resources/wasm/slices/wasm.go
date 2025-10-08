@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/andreatp/tinygo4j"
+	"github.com/roastedroot/tinygo4j"
 	"os"
 	"strings"
 )

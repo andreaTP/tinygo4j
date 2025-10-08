@@ -2,7 +2,7 @@ package main
 
 import (
 	qrcode "github.com/skip2/go-qrcode"
-	"github.com/andreatp/tinygo4j"
+	"github.com/roastedroot/tinygo4j"
 )
 
 //export genqr

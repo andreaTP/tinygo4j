@@ -1,4 +1,4 @@
-package io.roastedroot.tinygo;
+package io.roastedroot.tinygo4j;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/andreatp/tinygo4j"
+	"github.com/roastedroot/tinygo4j"
 )
 
 //go:wasmimport from_java my_java_func

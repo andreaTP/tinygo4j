@@ -71,7 +71,7 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
             cu.addImport(type.getQualifiedName().toString());
         }
 
-        cu.addImport("io.roastedroot.tinygo.Go");
+        cu.addImport("io.roastedroot.tinygo4j.Go");
         cu.addImport("com.dylibso.chicory.wasm.types.Value");
 
         var typeName = type.getSimpleName().toString();

@@ -37,9 +37,9 @@
   </modules>
 
   <scm>
-    <connection>scm:git:git://github.com/roastedroot/tinygo_wasm4j.git</connection>
-    <developerConnection>scm:git:ssh://github.com:roastedroot/tinygo_wasm4j.git</developerConnection>
-    <url>http://github.com/roastedroot/tinygo_wasm4j/tree/main</url>
+    <connection>scm:git:git://github.com/roastedroot/tinygo4j.git</connection>
+    <developerConnection>scm:git:ssh://github.com:roastedroot/tinygo4j.git</developerConnection>
+    <url>http://github.com/roastedroot/tinygo4j/tree/main</url>
   </scm>
 
   <properties>

@@ -70,7 +70,7 @@
               <goal>compile</goal>
             </goals>
             <configuration>
-              <name>io.roastedroot.tinygo.ExportWasi</name>
+              <name>io.roastedroot.tinygo4j.ExportWasi</name>
               <wasmFile>src/test/resources/wasm/compiled/export-wasi.wasm</wasmFile>
               <targetClassFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetClassFolder>
               <targetWasmFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetWasmFolder>

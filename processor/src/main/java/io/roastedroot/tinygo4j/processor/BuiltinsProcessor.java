@@ -93,7 +93,7 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         cu.addImport("com.dylibso.chicory.runtime.Instance");
         cu.addImport("com.dylibso.chicory.runtime.ImportFunction");
 
-        cu.addImport("io.roastedroot.tinygo.Go");
+        cu.addImport("io.roastedroot.tinygo4j.Go");
 
         var typeName = type.getSimpleName().toString();
         var processorName = new StringLiteralExpr(getClass().getName());
