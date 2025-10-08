@@ -169,7 +169,7 @@ func test() {
 func main() {}
 ```
 
-Notes
+Notes:
 - `@Invokables` generates a type-safe client to call Go exports.
 - `@Builtins` + `@HostFunction` generate WASM imports mapped to Java methods.
 - `@HostRefParam` / `@ReturnsHostRef` pass opaque Java objects by reference (no serialization) across the boundary.
