@@ -2,9 +2,9 @@
 - Make it super easy to use and support maven plugin and stuff
 - build time and runtime compiler support - DONE
 - host references everywhere for iterop - DONE
-- extend the PDK API to cover more primitive data types
-- high level API
-- support for Json in-out?
+- extend the PDK API to cover more primitive data types - DONE
+- high level API - DONE
+- support for Json in-out? - not for now
 - wasm-unknown support?
 - annotation processing: need to test at least all the supported params and returns! also for invokables
 - fix packages names and clean up things
