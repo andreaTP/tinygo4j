@@ -174,6 +174,39 @@ Notes:
 - `@Builtins` + `@HostFunction` generate WASM imports mapped to Java methods.
 - `@HostRefParam` / `@ReturnsHostRef` pass opaque Java objects by reference (no serialization) across the boundary.
 
+### Working with JavaRefs in Go
+
+Use the Go dependency for convenient JavaRef handling:
+
+```bash
+go get github.com/roastedroot/tinygo4j
+```
+
+Example Go code using the JavaRef API:
+
+```go
+package main
+
+import "github.com/roastedroot/tinygo4j"
+
+//export processString
+func processString(strRef tinygo4j.JavaRef) bool {
+    // Convert JavaRef to Go string
+    str := strRef.AsString()
+    
+    // Create new JavaRef with Go string
+    newRef := tinygo4j.Alloc().Set().String(str)
+    
+    // Clean up
+    newRef.Free()
+    
+    // Return boolean result
+    return len(str) > 0
+}
+
+func main() {}
+```
+
 ### Compile with TinyGo
 
 Compile your Go code with TinyGo targeting WASI (examples under `core/src/test/resources/wasm`):
