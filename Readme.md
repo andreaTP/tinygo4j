@@ -10,7 +10,7 @@
 - **Pure Java**: no native deps; works anywhere the JVM runs.
 - **WASI support**: run TinyGo WASI modules with configurable stdio/args/fs/env.
 
-### Quick start (Maven)
+### Project setup (Maven)
 
 Add dependencies and enable annotation processing:
 
