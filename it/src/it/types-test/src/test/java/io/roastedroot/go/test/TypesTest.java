@@ -2,6 +2,7 @@ package io.roastedroot.go.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.dylibso.chicory.wasm.Parser;
 import io.roastedroot.tinygo.Go;
@@ -19,81 +20,82 @@ class TypesTest {
     @Invokables
     interface GoApi {
         // Void-to-void guest functions
-        @GuestFunction
+        @GuestFunction("test_int_to_java")
         void testIntToJava();
 
-        @GuestFunction
+        @GuestFunction("test_long_to_java")
         void testLongToJava();
 
-        @GuestFunction
+        @GuestFunction("test_double_to_java")
         void testDoubleToJava();
 
-        @GuestFunction
+        @GuestFunction("test_float_to_java")
         void testFloatToJava();
 
-        @GuestFunction
+        @GuestFunction("test_bool_to_java")
         void testBoolToJava();
 
-        @GuestFunction
+        @GuestFunction("test_int_from_java")
         void testIntFromJava();
 
-        @GuestFunction
+        @GuestFunction("test_long_from_java")
         void testLongFromJava();
 
-        @GuestFunction
+        @GuestFunction("test_double_from_java")
         void testDoubleFromJava();
 
-        @GuestFunction
+        @GuestFunction("test_float_from_java")
         void testFloatFromJava();
 
-        @GuestFunction
+        @GuestFunction("test_bool_from_java")
         void testBoolFromJava();
 
-        @GuestFunction
+        @GuestFunction("test_ref_to_java")
         void testRefToJava();
 
-        @GuestFunction
+        @GuestFunction("test_ref_from_java")
         void testRefFromJava();
 
-        @GuestFunction
+        @GuestFunction("test_ref_roundtrip")
         void testRefRoundtrip();
 
         // Guest functions with parameters and return values
-        @GuestFunction
+        @GuestFunction("test_int_param_return")
         int testIntParamReturn(int value);
 
-        @GuestFunction
+        @GuestFunction("test_long_param_return")
         long testLongParamReturn(long value);
 
-        @GuestFunction
+        @GuestFunction("test_double_param_return")
         double testDoubleParamReturn(double value);
 
-        @GuestFunction
+        @GuestFunction("test_float_param_return")
         float testFloatParamReturn(float value);
 
-        @GuestFunction
+        @GuestFunction("test_bool_param_return")
         boolean testBoolParamReturn(boolean value);
 
-        @GuestFunction
-        String testRefParamReturn(String value);
+        @ReturnsHostRef
+        @GuestFunction("test_ref_param_return")
+        String testRefParamReturn(@HostRefParam String value);
 
         // Guest functions with multiple parameters
-        @GuestFunction
+        @GuestFunction("test_multi_int_params")
         int testMultiIntParams(int a, int b);
 
-        @GuestFunction
+        @GuestFunction("test_multi_long_params")
         long testMultiLongParams(long a, long b);
 
-        @GuestFunction
+        @GuestFunction("test_multi_double_params")
         double testMultiDoubleParams(double a, double b);
 
-        @GuestFunction
+        @GuestFunction("test_multi_float_params")
         float testMultiFloatParams(float a, float b);
 
-        @GuestFunction
+        @GuestFunction("test_multi_bool_params")
         boolean testMultiBoolParams(boolean a, boolean b);
 
-        @GuestFunction
+        @GuestFunction("test_mixed_params")
         int testMixedParams(int i, long l, double d, float f, boolean b);
     }
 

@@ -15,6 +15,7 @@ import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.CastExpr;
+import com.github.javaparser.ast.expr.ConditionalExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
@@ -240,10 +241,10 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
                             new VariableDeclarator(
                                     parseType("int"),
                                     "result",
-                                    new BinaryExpr(
+                                    new ConditionalExpr(
                                             invocation,
-                                            new IntegerLiteralExpr(0),
-                                            BinaryExpr.Operator.GREATER));
+                                            new IntegerLiteralExpr(1),
+                                            new IntegerLiteralExpr(0)));
                     break;
                 default:
                     if (annotatedWith(executable, ReturnsHostRef.class)) {
@@ -270,16 +271,18 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
             Expression returnValue;
             switch (executable.getReturnType().toString()) {
                 case "double":
-                    returnValue = new MethodCallExpr(
-                            new NameExpr("Value"),
-                            new SimpleName("doubleToLong"),
-                            NodeList.nodeList(new NameExpr("result")));
+                    returnValue =
+                            new MethodCallExpr(
+                                    new NameExpr("Value"),
+                                    new SimpleName("doubleToLong"),
+                                    NodeList.nodeList(new NameExpr("result")));
                     break;
                 case "float":
-                    returnValue = new MethodCallExpr(
-                            new NameExpr("Value"),
-                            new SimpleName("floatToLong"),
-                            NodeList.nodeList(new NameExpr("result")));
+                    returnValue =
+                            new MethodCallExpr(
+                                    new NameExpr("Value"),
+                                    new SimpleName("floatToLong"),
+                                    NodeList.nodeList(new NameExpr("result")));
                     break;
                 default:
                     returnValue = new NameExpr("result");
@@ -291,8 +294,7 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
                             new ArrayCreationExpr(
                                     parseType("long"),
                                     new NodeList<>(new ArrayCreationLevel()),
-                                    new ArrayInitializerExpr(
-                                            NodeList.nodeList(returnValue)))));
+                                    new ArrayInitializerExpr(NodeList.nodeList(returnValue)))));
         }
 
         // lambda for js function binding

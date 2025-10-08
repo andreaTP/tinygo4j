@@ -14,7 +14,10 @@ import com.github.javaparser.ast.expr.ArrayAccessExpr;
 import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.AssignExpr;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.CastExpr;
+import com.github.javaparser.ast.expr.ConditionalExpr;
+import com.github.javaparser.ast.expr.EnclosedExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
@@ -32,15 +35,12 @@ import io.roastedroot.tinygo4j.annotations.Invokables;
 import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 
 public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
 
@@ -72,6 +72,7 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
         }
 
         cu.addImport("io.roastedroot.tinygo.Go");
+        cu.addImport("com.dylibso.chicory.wasm.types.Value");
 
         var typeName = type.getSimpleName().toString();
         var processorName = new StringLiteralExpr(getClass().getName());
@@ -95,7 +96,6 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
                                 new NameExpr("go"),
                                 AssignExpr.Operator.ASSIGN));
 
-        List<Expression> functions = new ArrayList<>();
         for (Element member : elements().getAllMembers(type)) {
             if (member instanceof ExecutableElement && annotatedWith(member, GuestFunction.class)) {
                 var name = member.getAnnotation(GuestFunction.class).value();
@@ -124,24 +124,36 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
                             arguments.add(
                                     new MethodCallExpr(
                                             new NameExpr("Value"),
-                                            new SimpleName("longToFloat"),
+                                            new SimpleName("floatToLong"),
                                             NodeList.nodeList(new NameExpr("arg" + i))));
                             break;
                         case "double":
                             arguments.add(
                                     new MethodCallExpr(
                                             new NameExpr("Value"),
-                                            new SimpleName("longToDouble"),
+                                            new SimpleName("doubleToLong"),
                                             NodeList.nodeList(new NameExpr("arg" + i))));
                             break;
                         case "boolean":
-                            throw new IllegalArgumentException("TODO: implement me");
+                            arguments.add(
+                                    new ConditionalExpr(
+                                            new NameExpr("arg" + i),
+                                            new IntegerLiteralExpr("1"),
+                                            new IntegerLiteralExpr("0")));
+                            break;
                         default:
                             if (annotatedWith(param, HostRefParam.class)) {
-                                throw new IllegalArgumentException("TODO: implement me");
+                                arguments.add(
+                                        new MethodCallExpr(
+                                                new NameExpr("go"),
+                                                new SimpleName("allocJavaObj"),
+                                                NodeList.nodeList(new NameExpr("arg" + i))));
                             } else {
                                 throw new IllegalArgumentException(
-                                        "unsupported parameter type: " + typeLiteral);
+                                        "unsupported parameter type: "
+                                                + typeLiteral
+                                                + "for function "
+                                                + member.getSimpleName().toString());
                             }
                     }
                 }
@@ -163,25 +175,82 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
                 var hasReturn = extractHasReturn(executable);
                 if (hasReturn) {
                     var returnType = parseType(executable.getReturnType().toString());
+                    var primitiveReturn = false;
+                    switch (returnType.asString()) {
+                        case "int":
+                        case "long":
+                        case "float":
+                        case "double":
+                        case "boolean":
+                            primitiveReturn = true;
+                    }
 
                     overriddenMethod.setType(returnType);
-                    methodBody.addStatement(
-                            new ReturnStmt(
-                                    new CastExpr(
-                                            returnType,
-                                            new ArrayAccessExpr(
-                                                    invocationHandle, new IntegerLiteralExpr(0)))));
 
-                    //                    if (annotatedWith(executable, ReturnsHostRef.class)) {
-                    //
-                    //                    } else {
-                    //
-                    //                    }
+                    if (executable.getReturnType().toString().equals("boolean")) {
+                        methodBody.addStatement(
+                                new ReturnStmt(
+                                        new EnclosedExpr(
+                                                new BinaryExpr(
+                                                        new ArrayAccessExpr(
+                                                                invocationHandle,
+                                                                new IntegerLiteralExpr(0)),
+                                                        new IntegerLiteralExpr(0),
+                                                        BinaryExpr.Operator.GREATER))));
+                    } else if (executable.getReturnType().toString().equals("float")) {
+                        methodBody.addStatement(
+                                new ReturnStmt(
+                                        new MethodCallExpr(
+                                                new NameExpr("Value"),
+                                                new SimpleName("longToFloat"),
+                                                NodeList.nodeList(
+                                                        new ArrayAccessExpr(
+                                                                invocationHandle,
+                                                                new IntegerLiteralExpr(0))))));
+                    } else if (executable.getReturnType().toString().equals("double")) {
+                        methodBody.addStatement(
+                                new ReturnStmt(
+                                        new MethodCallExpr(
+                                                new NameExpr("Value"),
+                                                new SimpleName("longToDouble"),
+                                                NodeList.nodeList(
+                                                        new ArrayAccessExpr(
+                                                                invocationHandle,
+                                                                new IntegerLiteralExpr(0))))));
+                    } else if (!primitiveReturn
+                            && !annotatedWith(executable, ReturnsHostRef.class)) {
+                        throw new IllegalArgumentException(
+                                "unsupported return type: "
+                                        + returnType
+                                        + "for function "
+                                        + member.getSimpleName().toString());
+                    } else if (annotatedWith(executable, ReturnsHostRef.class)) {
+                        methodBody.addStatement(
+                                new ReturnStmt(
+                                        new CastExpr(
+                                                returnType,
+                                                new MethodCallExpr(
+                                                        new NameExpr("go"),
+                                                        new SimpleName("getJavaObj"),
+                                                        NodeList.nodeList(
+                                                                new CastExpr(
+                                                                        parseType("int"),
+                                                                        new ArrayAccessExpr(
+                                                                                invocationHandle,
+                                                                                new IntegerLiteralExpr(
+                                                                                        0))))))));
+                    } else {
+                        methodBody.addStatement(
+                                new ReturnStmt(
+                                        new CastExpr(
+                                                returnType,
+                                                new ArrayAccessExpr(
+                                                        invocationHandle,
+                                                        new IntegerLiteralExpr(0)))));
+                    }
                 } else {
                     methodBody.addStatement(invocationHandle);
                 }
-
-                functions.add(processGuestFunction((ExecutableElement) member));
             }
         }
 
@@ -204,102 +273,5 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
         } catch (IOException e) {
             log(ERROR, format("Failed to create %s file: %s", qualifiedName, e), null);
         }
-    }
-
-    private Expression addPrimitiveReturn(String typeLiteral) {
-        return new FieldAccessExpr(new NameExpr(typeLiteral), "class");
-    }
-
-    // TODO: review this implementation is wrong
-    private Expression extractReturn(ExecutableElement executable) {
-        String returnName = executable.getReturnType().toString();
-        Expression returnType;
-        switch (returnName) {
-            case "void":
-                returnType = new FieldAccessExpr(new NameExpr("java.lang.Void"), "class");
-                break;
-            case "int":
-                returnType = addPrimitiveReturn("java.lang.Integer");
-                break;
-            case "long":
-                returnType = addPrimitiveReturn("java.lang.Long");
-                break;
-            case "double":
-                returnType = addPrimitiveReturn("java.lang.Double");
-                break;
-            case "float":
-                returnType = addPrimitiveReturn("java.lang.Float");
-                break;
-            case "boolean":
-                returnType = addPrimitiveReturn("java.lang.Boolean");
-                break;
-            default:
-                if (annotatedWith(executable, ReturnsHostRef.class)) {
-                    var javaRefType = "io.roastedroot.quickjs4j.core.HostRef";
-                    returnType = new FieldAccessExpr(new NameExpr(javaRefType), "class");
-                } else {
-                    returnType = new FieldAccessExpr(new NameExpr(returnName), "class");
-                }
-                break;
-        }
-        return returnType;
-    }
-
-    NodeList<Expression> extractParameters(ExecutableElement executable) {
-        // compute parameter types and argument conversions
-        NodeList<Expression> paramTypes = new NodeList<>();
-        for (VariableElement parameter : executable.getParameters()) {
-            switch (parameter.asType().toString()) {
-                case "int":
-                    paramTypes.add(new FieldAccessExpr(new NameExpr("java.lang.Integer"), "class"));
-                    break;
-                case "long":
-                    paramTypes.add(new FieldAccessExpr(new NameExpr("java.lang.Long"), "class"));
-                    break;
-                case "double":
-                    paramTypes.add(new FieldAccessExpr(new NameExpr("java.lang.Double"), "class"));
-                    break;
-                case "float":
-                    paramTypes.add(new FieldAccessExpr(new NameExpr("java.lang.Float"), "class"));
-                    break;
-                case "boolean":
-                    paramTypes.add(new FieldAccessExpr(new NameExpr("java.lang.Boolean"), "class"));
-                    break;
-                default:
-                    var typeLiteral = parameter.asType().toString();
-                    if (annotatedWith(parameter, HostRefParam.class)) {
-                        var javaRefType = "io.roastedroot.quickjs4j.core.HostRef";
-                        paramTypes.add(new FieldAccessExpr(new NameExpr(javaRefType), "class"));
-                    } else {
-                        paramTypes.add(new FieldAccessExpr(new NameExpr(typeLiteral), "class"));
-                    }
-            }
-        }
-        return paramTypes;
-    }
-
-    private Expression processGuestFunction(ExecutableElement executable) {
-        // compute function name
-        var name = executable.getAnnotation(GuestFunction.class).value();
-        if (name.isEmpty()) {
-            name = executable.getSimpleName().toString();
-        }
-
-        // compute parameter types and argument conversions
-        NodeList<Expression> paramTypes = extractParameters(executable);
-
-        // compute return type and conversion
-        Expression returnType = extractReturn(executable);
-
-        // create Js function
-        var function =
-                new ObjectCreationExpr()
-                        .setType("GuestFunction")
-                        .addArgument(new StringLiteralExpr(name))
-                        .addArgument(new MethodCallExpr(new NameExpr("List"), "of", paramTypes))
-                        .addArgument(returnType);
-
-        function.setLineComment("");
-        return function;
     }
 }
