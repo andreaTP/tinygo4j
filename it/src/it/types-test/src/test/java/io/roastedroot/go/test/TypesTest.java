@@ -1,8 +1,8 @@
 package io.roastedroot.go.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.dylibso.chicory.wasm.Parser;
 import io.roastedroot.tinygo.Go;
