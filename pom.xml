@@ -69,7 +69,7 @@
 
     <!-- runtime versions -->
     <chicory.version>1.5.3</chicory.version>
-    <javaparser.version>3.27.0</javaparser.version>
+    <javaparser.version>3.27.1</javaparser.version>
   </properties>
 
   <build>
