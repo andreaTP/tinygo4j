@@ -4,9 +4,6 @@ import (
 	"unsafe"
 )
 
-// #include <stdlib.h>
-import "C"
-
 type JavaRef uint32
 type SetBuilder struct {
 	ref JavaRef
@@ -71,7 +68,7 @@ func (ref JavaRef) AsString() string {
 	buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
 	result := string(buffer)
 
-	C.free(ptr)
+	WasmFree(ptr)
 	return result
 }
 
@@ -86,7 +83,7 @@ func (ref JavaRef) AsBytes() []byte {
 
 	buffer := append([]byte(nil), unsafe.Slice((*byte)(ptr), length)...)
 
-	C.free(ptr)
+	WasmFree(ptr)
 	return buffer
 }
 
@@ -161,3 +158,30 @@ func asGoBool(ref JavaRef) bool
 
 //go:wasmimport env free
 func free(str JavaRef)
+
+// stable alloc/free implementation from:
+// https://github.com/tinygo-org/tinygo/blob/2a76ceb7dd5ea5a834ec470b724882564d9681b3/src/runtime/arch_tinygowasm_malloc.go#L7
+var allocs = make(map[uintptr][]byte)
+
+//go:wasmexport wasm_malloc
+func WasmMalloc(size uintptr) unsafe.Pointer {
+	if size == 0 {
+		return nil
+	}
+	buf := make([]byte, size)
+	ptr := unsafe.Pointer(&buf[0])
+	allocs[uintptr(ptr)] = buf
+	return ptr
+}
+
+//go:wasmexport wasm_free
+func WasmFree(ptr unsafe.Pointer) {
+	if ptr == nil {
+		return
+	}
+	if _, ok := allocs[uintptr(ptr)]; ok {
+		delete(allocs, uintptr(ptr))
+	} else {
+		panic("free: invalid pointer")
+	}
+}

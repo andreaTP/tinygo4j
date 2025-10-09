@@ -5,7 +5,7 @@ import (
 	"github.com/roastedroot/tinygo4j"
 )
 
-//export genqr
+//go:wasmexport genqr
 func genqr(strRef tinygo4j.JavaRef) tinygo4j.JavaRef {
 	str := strRef.AsString()
 

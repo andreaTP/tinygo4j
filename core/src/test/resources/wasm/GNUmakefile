@@ -8,16 +8,16 @@ export:
 	./build.sh export
 
 callback:
-	./build.sh callback
+	./build.sh callback command
 
 slices:
-	./build.sh slices
+	./build.sh slices command
 
 usage:
 	./build.sh usage
 
 main:
-	./build.sh main
+	./build.sh main command
 
 withdep:
 	./build.sh withdep

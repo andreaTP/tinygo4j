@@ -49,8 +49,8 @@ public final class Go {
         ExportFunction mallocFn = null;
         for (int i = 0; i < instance.module().exportSection().exportCount(); i++) {
             var export = instance.module().exportSection().getExport(i);
-            if (export.name().equals("malloc")) {
-                mallocFn = instance.exports().function("malloc");
+            if (export.name().equals("wasm_malloc")) {
+                mallocFn = instance.exports().function("wasm_malloc");
                 break;
             }
         }

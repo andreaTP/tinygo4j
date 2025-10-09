@@ -13,20 +13,43 @@ rm -f ${SCRIPT_DIR}/tinygo4j/*.go
 cp ${SCRIPT_DIR}/../../../../../*.mod ${SCRIPT_DIR}/tinygo4j
 cp ${SCRIPT_DIR}/../../../../../*.go ${SCRIPT_DIR}/tinygo4j
 
+echo "compiling ${name} with tinygo wasip1"
+
+if [[ "${mode}" == "command" ]]; then
+    docker run --rm \
+        -v ${SCRIPT_DIR}/${name}:/src \
+        -v ${SCRIPT_DIR}/tinygo4j:/tinygo4j \
+        -e GO111MODULE=on \
+        -w /src tinygo/tinygo bash \
+        -c "tinygo build --no-debug -target=wasip1 -o /tmp/tmp.wasm . && cat /tmp/tmp.wasm" > \
+        ${SCRIPT_DIR}/compiled/${name}-tinygo-wasip1.wasm
+else
+    docker run --rm \
+        -v ${SCRIPT_DIR}/${name}:/src \
+        -v ${SCRIPT_DIR}/tinygo4j:/tinygo4j \
+        -e GO111MODULE=on \
+        -w /src tinygo/tinygo bash \
+        -c "tinygo build --no-debug -buildmode=c-shared -target=wasip1 -o /tmp/tmp.wasm . && cat /tmp/tmp.wasm" > \
+        ${SCRIPT_DIR}/compiled/${name}-tinygo-wasip1.wasm
+fi
+
+echo "compiling ${name} with plain go wasip1"
 docker run --rm \
     -v ${SCRIPT_DIR}/${name}:/src \
     -v ${SCRIPT_DIR}/tinygo4j:/tinygo4j \
     -e GO111MODULE=on \
-    -w /src tinygo/tinygo bash \
-    -c "tinygo build --no-debug -target=wasip1 -o /tmp/tmp.wasm . && cat /tmp/tmp.wasm" > \
-    ${SCRIPT_DIR}/compiled/${name}-wasi.wasm
+    -w /src golang bash -lc \
+    "GOOS=wasip1 GOARCH=wasm /usr/local/go/bin/go build -o /tmp/tmp-go.wasm . && cat /tmp/tmp-go.wasm" > \
+    ${SCRIPT_DIR}/compiled/${name}-go-wasip1.wasm
 
 if [[ "${mode}" == "unknown" ]]; then
+
+    echo "compiling ${name} with tinygo wasm-unknown"
     docker run --rm \
         -v ${SCRIPT_DIR}/${name}:/src \
         -v ${SCRIPT_DIR}/tinygo4j:/tinygo4j \
         -e GO111MODULE=on \
         -w /src tinygo/tinygo bash \
         -c "tinygo build --no-debug -target=wasm-unknown -o /tmp/tmp.wasm . && cat /tmp/tmp.wasm" > \
-        ${SCRIPT_DIR}/compiled/${name}-wasm-unknown.wasm
+        ${SCRIPT_DIR}/compiled/${name}-tinygo-wasm-unknown.wasm
 fi

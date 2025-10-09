@@ -65,7 +65,7 @@ class HelloGoTest {
             var module =
                     Parser.parse(
                             Path.of(
-                                    "../../../../core/src/test/resources/wasm/compiled/hello-it-wasi.wasm"));
+                                    "../../../../core/src/test/resources/wasm/compiled/hello-it-go-wasip1.wasm"));
             this.javaApi = new JavaApi();
             this.go =
                     Go.builder(module)
@@ -74,6 +74,7 @@ class HelloGoTest {
                                     JavaApi_Builtins.toAdditionalImports(this.javaApi))
                             .build();
             this.goApi = GoApi_Invokables.create(go);
+            go.run();
         }
     }
 

@@ -17,13 +17,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class GoTest {
 
+    private static final String GO_WASIP1 = "go-wasip1";
+    private static final String TINYGO_WASIP1 = "tinygo-wasip1";
+    private static final String TINYGO_WASM_UNKNOWN = "tinygo-wasm-unknown";
+
     @Test
-    public void mainWasiExample() {
+    public void mainTinyGoWasiExample() {
         // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/main-wasi.wasm");
+        var wasm =
+                GoTest.class.getResourceAsStream("/wasm/compiled/main-" + TINYGO_WASIP1 + ".wasm");
         var module = Parser.parse(wasm);
         var stdout = new ByteArrayOutputStream();
         var wasiOpts = WasiOptions.builder().withStdout(stdout).build();
@@ -37,11 +44,32 @@ public class GoTest {
         assertEquals("Hello world!\n", stdout.toString(StandardCharsets.UTF_8));
     }
 
-    // low level API
     @Test
-    public void importWasiExample() {
+    public void mainGoWasiExample() {
         // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/import-wasi.wasm");
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/main-" + GO_WASIP1 + ".wasm");
+        var module = Parser.parse(wasm);
+        var stderr = new ByteArrayOutputStream();
+        var wasiOpts =
+                WasiOptions.builder()
+                        // println is redirected to stderr?!
+                        .withStderr(stderr)
+                        .build();
+        var go = Go.builder(module).withWasi(wasiOpts).build();
+
+        // Act
+        var result = go.run();
+
+        // Assert
+        assertEquals(0, result);
+        assertEquals("Hello world!\n", stderr.toString(StandardCharsets.UTF_8));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1, TINYGO_WASM_UNKNOWN})
+    public void importExample(String mode) {
+        // Arrange
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/import-" + mode + ".wasm");
         var module = Parser.parse(wasm);
 
         var go = Go.builder(module).withWasi().build();
@@ -54,26 +82,11 @@ public class GoTest {
         assertEquals(323, result);
     }
 
-    @Test
-    public void importUnknownExample() {
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1})
+    public void usageExample(String mode) {
         // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/import-wasm-unknown.wasm");
-        var module = Parser.parse(wasm);
-
-        var go = Go.builder(module).build();
-
-        // Act
-        go.run();
-        var result = go.exec("operation", new long[] {321})[0];
-
-        // Assert
-        assertEquals(323, result);
-    }
-
-    @Test
-    public void usageWasiExample() {
-        // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/usage-wasi.wasm");
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/usage-" + mode + ".wasm");
         var module = Parser.parse(wasm);
 
         var go =
@@ -112,11 +125,12 @@ public class GoTest {
         assertFalse(result2);
     }
 
-    @Test
-    public void callbackWasiExample() {
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1})
+    public void callbackExample(String mode) {
         // Arrange
         var resetInvoked = new AtomicInteger();
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/callback-wasi.wasm");
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/callback-" + mode + ".wasm");
         var module = Parser.parse(wasm);
 
         var go =
@@ -149,10 +163,11 @@ public class GoTest {
         assertEquals(11, resetInvoked.get());
     }
 
-    @Test
-    public void exportWasiExample() {
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1})
+    public void exportExample(String mode) {
         // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/export-wasi.wasm");
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/export-" + mode + ".wasm");
         var module = Parser.parse(wasm);
 
         var go = Go.builder(module).withWasi().build();
@@ -168,10 +183,11 @@ public class GoTest {
         assertEquals("14", result);
     }
 
-    @Test
-    public void exportWasiRuntimeCompilerExample() {
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1})
+    public void exportWasiRuntimeCompilerExample(String mode) {
         // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/export-wasi.wasm");
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/export-" + mode + ".wasm");
         var module = Parser.parse(wasm);
 
         var go =
@@ -192,11 +208,11 @@ public class GoTest {
     }
 
     @Test
-    public void exportWasiBuildTimeCompilerExample() {
+    public void exportTinyGoWasiBuildTimeCompilerExample() {
         // Arrange
-        var module = ExportWasi.load();
+        var module = ExportTinygoWasi.load();
 
-        var go = Go.builder(module).withWasi().withMachineFactory(ExportWasi::create).build();
+        var go = Go.builder(module).withWasi().withMachineFactory(ExportTinygoWasi::create).build();
 
         // Act
         go.run();
@@ -210,14 +226,35 @@ public class GoTest {
     }
 
     @Test
-    public void slicesWasiExample() {
+    public void exportGoWasiBuildTimeCompilerExample() {
         // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/slices-wasi.wasm");
+        var module = ExportGoWasi.load();
+
+        var go = Go.builder(module).withWasi().withMachineFactory(ExportGoWasi::create).build();
+
+        // Act
+        go.run();
+        var aRef = go.allocJavaObj("3");
+        var bRef = go.allocJavaObj("11");
+        var resultRef = (int) go.exec("update", new long[] {aRef, bRef})[0];
+        var result = go.getJavaObj(resultRef);
+
+        // Assert
+        assertEquals("14", result);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1})
+    public void slicesExample(String mode) {
+        // Arrange
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/slices-" + mode + ".wasm");
         var module = Parser.parse(wasm);
         var stdout = new ByteArrayOutputStream();
         var wasiOpts =
                 WasiOptions.builder()
                         .withStdout(stdout)
+                        // Known to be redirected with plain Go
+                        .withStderr(stdout)
                         .withArguments(List.of("program-name", "1,2,3"))
                         .build();
 
@@ -230,11 +267,12 @@ public class GoTest {
         assertEquals("[1 2 3]\n", stdout.toString(StandardCharsets.UTF_8));
     }
 
-    @Test
-    public void withdepWasiExample() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1})
+    public void withdepExample(String mode) throws Exception {
         // Arrange
         var expectedResult = GoTest.class.getResourceAsStream("/qrcode.png").readAllBytes();
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/withdep-wasi.wasm");
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/withdep-" + mode + ".wasm");
         var module = Parser.parse(wasm);
 
         var go = Go.builder(module).withWasi().build();
@@ -249,10 +287,11 @@ public class GoTest {
         assertArrayEquals(expectedResult, result);
     }
 
-    @Test
-    public void datatypesWasiExample() {
+    @ParameterizedTest
+    @ValueSource(strings = {TINYGO_WASIP1, GO_WASIP1})
+    public void datatypesExample(String mode) {
         // Arrange
-        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/datatypes-wasi.wasm");
+        var wasm = GoTest.class.getResourceAsStream("/wasm/compiled/datatypes-" + mode + ".wasm");
         var module = Parser.parse(wasm);
 
         var go = Go.builder(module).withWasi().build();

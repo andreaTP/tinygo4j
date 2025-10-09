@@ -7,7 +7,7 @@ import (
 //go:wasmimport mygo javaValidate
 func myJavaValidate(str tinygo4j.JavaRef) tinygo4j.JavaRef
 
-//export usage
+//go:wasmexport usage
 func usage(strRef tinygo4j.JavaRef) bool {
 	str := strRef.AsString()
 	strRef2 := tinygo4j.Alloc().Set().String(str)

@@ -193,13 +193,13 @@ import "github.com/roastedroot/tinygo4j"
 func processString(strRef tinygo4j.JavaRef) bool {
     // Convert JavaRef to Go string
     str := strRef.AsString()
-    
+
     // Create new JavaRef with Go string
     newRef := tinygo4j.Alloc().Set().String(str)
-    
+
     // Clean up
     newRef.Free()
-    
+
     // Return boolean result
     return len(str) > 0
 }

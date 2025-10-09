@@ -215,7 +215,7 @@ class TypesTest {
             var module =
                     Parser.parse(
                             Path.of(
-                                    "../../../../core/src/test/resources/wasm/compiled/types-test-wasi.wasm"));
+                                    "../../../../core/src/test/resources/wasm/compiled/types-test-tinygo-wasip1.wasm"));
             this.javaApi = new JavaApi();
             this.go =
                     Go.builder(module)
@@ -224,6 +224,7 @@ class TypesTest {
                                     JavaApi_Builtins.toAdditionalImports(this.javaApi))
                             .build();
             this.goApi = GoApi_Invokables.create(go);
+            go.run();
         }
     }
 

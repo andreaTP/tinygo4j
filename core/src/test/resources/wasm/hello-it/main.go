@@ -16,12 +16,12 @@ func myJavaRef() tinygo4j.JavaRef
 //go:wasmimport from_java my_java_ref_check
 func myJavaRefCheck(value tinygo4j.JavaRef)
 
-//export test1
+//go:wasmexport test1
 func test1() {
 	myJavaCheck(myJavaFunc(40, 2))
 }
 
-//export test2
+//go:wasmexport test2
 func test2() {
 	myJavaRefCheck(myJavaRef());
 }
