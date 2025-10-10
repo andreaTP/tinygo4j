@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/roastedroot/tinygo4j"
+	"github.com/roastedroot/go4j"
 )
 
 //go:wasmimport mygo javaValidate
-func myJavaValidate(str tinygo4j.JavaRef) tinygo4j.JavaRef
+func myJavaValidate(str go4j.JavaRef) go4j.JavaRef
 
-//export usage
-func usage(strRef tinygo4j.JavaRef) bool {
+//go:wasmexport usage
+func usage(strRef go4j.JavaRef) bool {
 	str := strRef.AsString()
-	strRef2 := tinygo4j.Alloc().Set().String(str)
+	strRef2 := go4j.Alloc().Set().String(str)
 
 	valid := myJavaValidate(strRef2)
 

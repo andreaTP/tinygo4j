@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/roastedroot/tinygo4j"
+	"github.com/roastedroot/go4j"
 	"os"
 	"strings"
 )
 
-func splitter(strRef tinygo4j.JavaRef) tinygo4j.JavaRef {
+func splitter(strRef go4j.JavaRef) go4j.JavaRef {
 	str := strRef.AsString()
 	values := strings.Split(str, ",")
 
@@ -16,12 +16,12 @@ func splitter(strRef tinygo4j.JavaRef) tinygo4j.JavaRef {
 		result = append(result, each)
 	}
 
-	return tinygo4j.Alloc().Set().String(fmt.Sprintf("%v", result))
+	return go4j.Alloc().Set().String(fmt.Sprintf("%v", result))
 }
 
 func main() {
 	arg1 := os.Args[1]
-	in := tinygo4j.Alloc().Set().String(arg1)
+	in := go4j.Alloc().Set().String(arg1)
 	str := splitter(in).AsString()
 	println(str)
 }

@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/roastedroot/tinygo4j"
+	"github.com/roastedroot/go4j"
 	"strconv"
 	"time"
 )
 
 func main() {
-	strRef := tinygo4j.Alloc().Set().String("0")
+	strRef := go4j.Alloc().Set().String("0")
 
 	ticker := time.NewTicker(200 * time.Millisecond)
 	quit := make(chan struct{})
@@ -28,9 +28,9 @@ func main() {
 }
 
 //go:wasmimport mygo reset
-func reset(strRef tinygo4j.JavaRef)
+func reset(strRef go4j.JavaRef)
 
-func update(strRef tinygo4j.JavaRef) bool {
+func update(strRef go4j.JavaRef) bool {
 	str := strRef.AsString()
 
 	n, _ := strconv.Atoi(str)
@@ -39,7 +39,7 @@ func update(strRef tinygo4j.JavaRef) bool {
 		reset(strRef)
 		return true
 	} else {
-		tinygo4j.Set(strRef).String(strconv.Itoa(n + 1))
+		go4j.Set(strRef).String(strconv.Itoa(n + 1))
 	}
 
 	return false

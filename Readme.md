@@ -1,10 +1,10 @@
-### TinyGo4J
+### Go4J
 
-**TinyGo4J** lets you run TinyGo‑compiled WebAssembly and interoperate with Java on the JVM. It uses the [Chicory](https://github.com/dylibso/chicory) runtime and provides both a low‑level API and an annotation‑driven, high‑level, type‑safe binding layer.
+**Go4J** lets you run TinyGo‑compiled WebAssembly and interoperate with Java on the JVM. It uses the [Chicory](https://github.com/dylibso/chicory) runtime and provides both a low‑level API and an annotation‑driven, high‑level, type‑safe binding layer.
 
 > **Experimental**: This project is experimental and we are looking for feedback on the design and implementation. Try it out and let us know what you think!
 
-### Why TinyGo4J?
+### Why Go4J?
 
 - **Interop made easy**: pass primitives and opaque Java object references between Go and Java.
 - **Pure Java**: no native deps; works anywhere the JVM runs.
@@ -18,11 +18,11 @@ Add dependencies and enable annotation processing:
 <dependencies>
   <dependency>
     <groupId>io.roastedroot</groupId>
-    <artifactId>tinygo4j-core</artifactId>
+    <artifactId>go4j-core</artifactId>
   </dependency>
   <dependency>
     <groupId>io.roastedroot</groupId>
-    <artifactId>tinygo4j-annotations</artifactId>
+    <artifactId>go4j-annotations</artifactId>
     <scope>provided</scope>
   </dependency>
 </dependencies>
@@ -36,7 +36,7 @@ Add dependencies and enable annotation processing:
         <annotationProcessorPaths>
           <path>
             <groupId>io.roastedroot</groupId>
-            <artifactId>tinygo4j-processor</artifactId>
+            <artifactId>go4j-processor</artifactId>
           </path>
         </annotationProcessorPaths>
       </configuration>
@@ -52,7 +52,7 @@ Run a TinyGo WASI module and capture stdout:
 ```java
 import com.dylibso.chicory.wasm.Parser;
 import com.dylibso.chicory.wasi.WasiOptions;
-import io.roastedroot.tinygo4j.Go;
+import io.roastedroot.go4j.Go;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -85,8 +85,8 @@ Define an interface for Go exports and call it from Java:
 
 ```java
 import com.dylibso.chicory.wasm.Parser;
-import io.roastedroot.tinygo4j.Go;
-import io.roastedroot.tinygo4j.annotations.*;
+import io.roastedroot.go4j.Go;
+import io.roastedroot.go4j.annotations.*;
 import java.nio.file.Path;
 
 @Invokables
@@ -120,8 +120,8 @@ Expose Java methods to Go via annotations, then execute Go code that calls them:
 
 ```java
 import com.dylibso.chicory.wasm.Parser;
-import io.roastedroot.tinygo4j.Go;
-import io.roastedroot.tinygo4j.annotations.*;
+import io.roastedroot.go4j.Go;
+import io.roastedroot.go4j.annotations.*;
 import java.nio.file.Path;
 
 @Builtins("from_java")
@@ -179,7 +179,7 @@ Notes:
 Use the Go dependency for convenient JavaRef handling:
 
 ```bash
-go get github.com/roastedroot/tinygo4j
+go get github.com/roastedroot/go4j
 ```
 
 Example Go code using the JavaRef API:
@@ -187,19 +187,19 @@ Example Go code using the JavaRef API:
 ```go
 package main
 
-import "github.com/roastedroot/tinygo4j"
+import "github.com/roastedroot/go4j"
 
 //export processString
-func processString(strRef tinygo4j.JavaRef) bool {
+func processString(strRef go4j.JavaRef) bool {
     // Convert JavaRef to Go string
     str := strRef.AsString()
-    
+
     // Create new JavaRef with Go string
-    newRef := tinygo4j.Alloc().Set().String(str)
-    
+    newRef := go4j.Alloc().Set().String(str)
+
     // Clean up
     newRef.Free()
-    
+
     // Return boolean result
     return len(str) > 0
 }
@@ -207,12 +207,18 @@ func processString(strRef tinygo4j.JavaRef) bool {
 func main() {}
 ```
 
-### Compile with TinyGo
+### Compile Go
 
 Compile your Go code with TinyGo targeting WASI (examples under `core/src/test/resources/wasm`):
 
 ```bash
 tinygo build -o your.wasm -target=wasip1 ./path/to/main.go
+```
+
+Or with the standard Go compiler:
+
+```bash
+GOOS=wasip1 GOARCH=wasm go build -o your.wasm ./path/to/main.go
 ```
 
 Basic support is also available for `wasm-unknown-unknown`:

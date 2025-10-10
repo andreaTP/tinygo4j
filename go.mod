@@ -1,3 +1,3 @@
-module github.com/roastedroot/tinygo4j
+module github.com/roastedroot/go4j
 
 go 1.21.13

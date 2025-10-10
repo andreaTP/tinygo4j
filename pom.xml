@@ -3,13 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.roastedroot</groupId>
-  <artifactId>tinygo4j-parent</artifactId>
+  <artifactId>go4j-parent</artifactId>
   <version>999-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>tinygo4j-parent</name>
+  <name>go4j-parent</name>
   <description>TinyGo helpers to run Wasm on the JVM</description>
-  <url>https://github.com/roastedroot/tinygo4j/</url>
+  <url>https://github.com/roastedroot/go4j/</url>
 
   <licenses>
     <license>
@@ -37,9 +37,9 @@
   </modules>
 
   <scm>
-    <connection>scm:git:git://github.com/roastedroot/tinygo4j.git</connection>
-    <developerConnection>scm:git:ssh://github.com:roastedroot/tinygo4j.git</developerConnection>
-    <url>http://github.com/roastedroot/tinygo4j/tree/main</url>
+    <connection>scm:git:git://github.com/roastedroot/go4j.git</connection>
+    <developerConnection>scm:git:ssh://github.com:roastedroot/go4j.git</developerConnection>
+    <url>http://github.com/roastedroot/go4j/tree/main</url>
   </scm>
 
   <properties>

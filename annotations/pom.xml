@@ -4,14 +4,14 @@
 
   <parent>
     <groupId>io.roastedroot</groupId>
-    <artifactId>tinygo4j-parent</artifactId>
+    <artifactId>go4j-parent</artifactId>
     <version>999-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>tinygo4j-annotations</artifactId>
+  <artifactId>go4j-annotations</artifactId>
   <packaging>jar</packaging>
-  <name>Tinygo4J - Annotations</name>
+  <name>Go4J - Annotations</name>
   <description>Experimental annotations for exposing Java functions to Go</description>
 
 </project>

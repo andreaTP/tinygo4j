@@ -4,14 +4,14 @@
 
   <parent>
     <groupId>io.roastedroot</groupId>
-    <artifactId>tinygo4j-parent</artifactId>
+    <artifactId>go4j-parent</artifactId>
     <version>999-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>tinygo4j</artifactId>
+  <artifactId>go4j</artifactId>
   <packaging>jar</packaging>
-  <name>tinygo4j</name>
+  <name>go4j</name>
 
   <dependencies>
     <dependency>
@@ -43,6 +43,12 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -65,13 +71,27 @@
         <artifactId>chicory-compiler-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>export-wasi</id>
+            <id>export-tinygo-wasi</id>
             <goals>
               <goal>compile</goal>
             </goals>
             <configuration>
-              <name>io.roastedroot.tinygo4j.ExportWasi</name>
-              <wasmFile>src/test/resources/wasm/compiled/export-wasi.wasm</wasmFile>
+              <name>io.roastedroot.go4j.ExportTinygoWasi</name>
+              <wasmFile>src/test/resources/wasm/compiled/export-tinygo-wasip1.wasm</wasmFile>
+              <targetClassFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetClassFolder>
+              <targetWasmFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetWasmFolder>
+              <targetSourceFolder>${project.build.directory}/generated-test-sources/chicory-compiler</targetSourceFolder>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>export-go-wasi</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <name>io.roastedroot.go4j.ExportGoWasi</name>
+              <wasmFile>src/test/resources/wasm/compiled/export-go-wasip1.wasm</wasmFile>
               <targetClassFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetClassFolder>
               <targetWasmFolder>${project.build.directory}/generated-test-resources/chicory-compiler</targetWasmFolder>
               <targetSourceFolder>${project.build.directory}/generated-test-sources/chicory-compiler</targetSourceFolder>

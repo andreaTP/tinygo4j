@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.dylibso.chicory.wasm.Parser;
-import io.roastedroot.tinygo4j.Go;
-import io.roastedroot.tinygo4j.annotations.Builtins;
-import io.roastedroot.tinygo4j.annotations.GuestFunction;
-import io.roastedroot.tinygo4j.annotations.HostFunction;
-import io.roastedroot.tinygo4j.annotations.HostRefParam;
-import io.roastedroot.tinygo4j.annotations.Invokables;
-import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
+import io.roastedroot.go4j.Go;
+import io.roastedroot.go4j.annotations.Builtins;
+import io.roastedroot.go4j.annotations.GuestFunction;
+import io.roastedroot.go4j.annotations.HostFunction;
+import io.roastedroot.go4j.annotations.HostRefParam;
+import io.roastedroot.go4j.annotations.Invokables;
+import io.roastedroot.go4j.annotations.ReturnsHostRef;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
@@ -65,7 +65,7 @@ class HelloGoTest {
             var module =
                     Parser.parse(
                             Path.of(
-                                    "../../../../core/src/test/resources/wasm/compiled/hello-it-wasi.wasm"));
+                                    "../../../../core/src/test/resources/wasm/compiled/hello-it-go-wasip1.wasm"));
             this.javaApi = new JavaApi();
             this.go =
                     Go.builder(module)
@@ -74,6 +74,7 @@ class HelloGoTest {
                                     JavaApi_Builtins.toAdditionalImports(this.javaApi))
                             .build();
             this.goApi = GoApi_Invokables.create(go);
+            go.run();
         }
     }
 

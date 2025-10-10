@@ -1,25 +1,25 @@
 package main
 
 import (
-	"github.com/roastedroot/tinygo4j"
+	"github.com/roastedroot/go4j"
 	"strconv"
 )
 
 func main() {
 }
 
-//export add
-func add(a, b int) int {
+//go:wasmexport add
+func add(a, b uint32) uint32 {
 	return a + b
 }
 
-//export update
-func update(aRef, bRef tinygo4j.JavaRef) tinygo4j.JavaRef {
+//go:wasmexport update
+func update(aRef, bRef go4j.JavaRef) go4j.JavaRef {
 	aStr := aRef.AsString()
 	bStr := bRef.AsString()
 	a, _ := strconv.Atoi(aStr)
 	b, _ := strconv.Atoi(bStr)
-	result := add(a, b)
+	result := add(uint32(a), uint32(b))
 
-	return tinygo4j.Alloc().Set().String(strconv.Itoa(result))
+	return go4j.Alloc().Set().String(strconv.Itoa(int(result)))
 }

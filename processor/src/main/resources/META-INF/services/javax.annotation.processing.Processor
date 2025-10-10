@@ -1,2 +1,2 @@
-io.roastedroot.tinygo4j.processor.BuiltinsProcessor
-io.roastedroot.tinygo4j.processor.InvokablesProcessor
+io.roastedroot.go4j.processor.BuiltinsProcessor
+io.roastedroot.go4j.processor.InvokablesProcessor
