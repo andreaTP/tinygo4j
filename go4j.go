@@ -1,4 +1,4 @@
-package tinygo4j
+package go4j
 
 import (
 	"unsafe"

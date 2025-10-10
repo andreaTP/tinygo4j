@@ -1,4 +1,4 @@
-package io.roastedroot.tinygo4j;
+package io.roastedroot.go4j;
 
 import com.dylibso.chicory.runtime.ByteArrayMemory;
 import com.dylibso.chicory.runtime.ExportFunction;

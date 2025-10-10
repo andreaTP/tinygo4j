@@ -1,20 +1,20 @@
 package main
 
 import (
-	"github.com/roastedroot/tinygo4j"
+	"github.com/roastedroot/go4j"
 )
 
 //go:wasmimport from_java my_java_func
-func myJavaFunc(x, y uint32) tinygo4j.JavaRef
+func myJavaFunc(x, y uint32) go4j.JavaRef
 
 //go:wasmimport from_java my_java_check
-func myJavaCheck(value tinygo4j.JavaRef)
+func myJavaCheck(value go4j.JavaRef)
 
 //go:wasmimport from_java my_java_ref
-func myJavaRef() tinygo4j.JavaRef
+func myJavaRef() go4j.JavaRef
 
 //go:wasmimport from_java my_java_ref_check
-func myJavaRefCheck(value tinygo4j.JavaRef)
+func myJavaRefCheck(value go4j.JavaRef)
 
 //go:wasmexport test1
 func test1() {

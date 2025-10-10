@@ -1,4 +1,4 @@
-package io.roastedroot.tinygo4j.processor;
+package io.roastedroot.go4j.processor;
 
 import static com.github.javaparser.StaticJavaParser.parseType;
 import static java.lang.String.format;
@@ -30,10 +30,10 @@ import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
-import io.roastedroot.tinygo4j.annotations.Builtins;
-import io.roastedroot.tinygo4j.annotations.HostFunction;
-import io.roastedroot.tinygo4j.annotations.HostRefParam;
-import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
+import io.roastedroot.go4j.annotations.Builtins;
+import io.roastedroot.go4j.annotations.HostFunction;
+import io.roastedroot.go4j.annotations.HostRefParam;
+import io.roastedroot.go4j.annotations.ReturnsHostRef;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 
-public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
+public final class BuiltinsProcessor extends Go4JAbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -93,7 +93,7 @@ public final class BuiltinsProcessor extends Tinygo4jAbstractProcessor {
         cu.addImport("com.dylibso.chicory.runtime.Instance");
         cu.addImport("com.dylibso.chicory.runtime.ImportFunction");
 
-        cu.addImport("io.roastedroot.tinygo4j.Go");
+        cu.addImport("io.roastedroot.go4j.Go");
 
         var typeName = type.getSimpleName().toString();
         var processorName = new StringLiteralExpr(getClass().getName());

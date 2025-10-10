@@ -1,4 +1,4 @@
-package io.roastedroot.tinygo4j.processor;
+package io.roastedroot.go4j.processor;
 
 import static com.github.javaparser.StaticJavaParser.parseClassOrInterfaceType;
 import static com.github.javaparser.StaticJavaParser.parseType;
@@ -29,10 +29,10 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
-import io.roastedroot.tinygo4j.annotations.GuestFunction;
-import io.roastedroot.tinygo4j.annotations.HostRefParam;
-import io.roastedroot.tinygo4j.annotations.Invokables;
-import io.roastedroot.tinygo4j.annotations.ReturnsHostRef;
+import io.roastedroot.go4j.annotations.GuestFunction;
+import io.roastedroot.go4j.annotations.HostRefParam;
+import io.roastedroot.go4j.annotations.Invokables;
+import io.roastedroot.go4j.annotations.ReturnsHostRef;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Set;
@@ -42,7 +42,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
-public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
+public final class InvokablesProcessor extends Go4JAbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -71,7 +71,7 @@ public final class InvokablesProcessor extends Tinygo4jAbstractProcessor {
             cu.addImport(type.getQualifiedName().toString());
         }
 
-        cu.addImport("io.roastedroot.tinygo4j.Go");
+        cu.addImport("io.roastedroot.go4j.Go");
         cu.addImport("com.dylibso.chicory.wasm.types.Value");
 
         var typeName = type.getSimpleName().toString();

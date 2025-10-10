@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/roastedroot/tinygo4j"
+	"github.com/roastedroot/go4j"
 )
 
 // Host functions for primitive types as parameters
@@ -38,13 +38,13 @@ func testBoolReturn() bool
 
 // Host functions for references
 //go:wasmimport from_java test_ref_param
-func testRefParam(value tinygo4j.JavaRef)
+func testRefParam(value go4j.JavaRef)
 
 //go:wasmimport from_java test_ref_return
-func testRefReturn() tinygo4j.JavaRef
+func testRefReturn() go4j.JavaRef
 
 //go:wasmimport from_java test_ref_check
-func testRefCheck(value tinygo4j.JavaRef)
+func testRefCheck(value go4j.JavaRef)
 
 // Guest functions to test primitive types passing from Go to Java
 //go:wasmexport test_int_to_java
@@ -153,7 +153,7 @@ func testBoolParamReturn(value bool) bool {
 }
 
 //go:wasmexport test_ref_param_return
-func testRefParamReturn(value tinygo4j.JavaRef) tinygo4j.JavaRef {
+func testRefParamReturn(value go4j.JavaRef) go4j.JavaRef {
 	return value
 }
 

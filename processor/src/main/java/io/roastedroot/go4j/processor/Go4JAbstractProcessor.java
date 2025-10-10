@@ -1,12 +1,12 @@
-package io.roastedroot.tinygo4j.processor;
+package io.roastedroot.go4j.processor;
 
 import static com.github.javaparser.printer.configuration.DefaultPrinterConfiguration.ConfigOption.COLUMN_ALIGN_PARAMETERS;
 
 import com.github.javaparser.printer.DefaultPrettyPrinter;
 import com.github.javaparser.printer.configuration.DefaultConfigurationOption;
 import com.github.javaparser.printer.configuration.DefaultPrinterConfiguration;
-import io.roastedroot.tinygo4j.annotations.Builtins;
-import io.roastedroot.tinygo4j.annotations.Invokables;
+import io.roastedroot.go4j.annotations.Builtins;
+import io.roastedroot.go4j.annotations.Invokables;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -21,7 +21,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 
-public abstract class Tinygo4jAbstractProcessor extends AbstractProcessor {
+public abstract class Go4JAbstractProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {

@@ -1,4 +1,4 @@
-package io.roastedroot.tinygo4j.annotations;
+package io.roastedroot.go4j.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface GuestFunction {
+@Target(ElementType.TYPE)
+public @interface Builtins {
     String value() default "";
 }

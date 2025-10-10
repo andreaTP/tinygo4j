@@ -1,4 +1,4 @@
-package io.roastedroot.tinygo4j;
+package io.roastedroot.go4j;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
